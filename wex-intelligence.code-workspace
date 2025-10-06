@@ -1,0 +1,31 @@
+{
+    "folders": [
+        {
+            "name": "WEX Intelligence - Backend",
+            "path": "./backend"
+        },
+        {
+            "name": "WEX Intelligence - Frontend", 
+            "path": "./frontend"
+        }
+    ],
+    "settings": {
+        "python.defaultInterpreterPath": "./backend/venv/Scripts/python.exe",
+        "python.terminal.activateEnvironment": true,
+        "files.exclude": {
+            "**/node_modules": true,
+            "**/.git": true,
+            "**/.DS_Store": true,
+            "**/venv": false
+        }
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-python.python",
+            "ms-python.vscode-pylance",
+            "ms-vscode.vscode-typescript-next",
+            "bradlc.vscode-tailwindcss",
+            "esbenp.prettier-vscode"
+        ]
+    }
+}

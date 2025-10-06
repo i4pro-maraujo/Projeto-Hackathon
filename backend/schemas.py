@@ -38,7 +38,7 @@ class ChamadoResponse(ChamadoBase):
     total_followups: int = 0
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Schemas para Follow-ups
 class FollowUpBase(BaseModel):
@@ -62,7 +62,7 @@ class FollowUpResponse(FollowUpBase):
     data_criacao: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Schema para métricas do dashboard
 class DashboardMetricas(BaseModel):

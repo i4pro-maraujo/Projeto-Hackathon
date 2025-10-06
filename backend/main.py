@@ -1,5 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import get_db, create_database
@@ -12,31 +14,48 @@ from schemas import (
 import json
 from datetime import datetime, timedelta
 from sqlalchemy import func, or_, and_
+import os
+
+# Configuração do lifespan
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    create_database()
+    yield
+    # Shutdown
+    pass
 
 # Criar instância do FastAPI
 app = FastAPI(
     title="WEX Intelligence API",
     description="API para Sistema de Triagem Automática de Chamados",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Configurar CORS para frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8000", "http://127.0.0.1:8000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Criar banco de dados ao iniciar
-@app.on_event("startup")
-async def startup_event():
-    create_database()
+# Montar arquivos estáticos
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # Health check
 @app.get("/")
 def read_root():
+    index_path = os.path.join(os.path.dirname(__file__), "static", "index.html")
+    return FileResponse(index_path)
+
+@app.get("/api/health")
+def health_check():
     return {"message": "WEX Intelligence API is running!", "version": "1.0.0"}
 
 # === ENDPOINTS DE CHAMADOS ===

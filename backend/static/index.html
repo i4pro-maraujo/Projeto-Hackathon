@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WEX Intelligence - Sistema de Triagem Automática</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .header p {
+            opacity: 0.9;
+            margin-top: 0.5rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            border-left: 4px solid;
+        }
+
+        .metric-card.total { border-left-color: #3498db; }
+        .metric-card.critical { border-left-color: #e74c3c; }
+        .metric-card.resolved { border-left-color: #2ecc71; }
+        .metric-card.average { border-left-color: #f39c12; }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .content-section {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 0.5rem;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .filter-group label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .filter-group select, .filter-group input {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .table th, .table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-aberto { background-color: #e3f2fd; color: #1976d2; }
+        .status-em-analise { background-color: #fff3e0; color: #f57c00; }
+        .status-pendente { background-color: #fce4ec; color: #c2185b; }
+        .status-resolvido { background-color: #e8f5e8; color: #388e3c; }
+        .status-fechado { background-color: #f5f5f5; color: #616161; }
+
+        .criticidade-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .criticidade-baixa { background-color: #e8f5e8; color: #388e3c; }
+        .criticidade-media { background-color: #fff3e0; color: #f57c00; }
+        .criticidade-alta { background-color: #ffebee; color: #d32f2f; }
+        .criticidade-critica { background-color: #ffcdd2; color: #b71c1c; }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 2rem;
+        }
+
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .pagination button.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🎯 WEX Intelligence</h1>
+        <p>Sistema de Triagem Automática de Chamados</p>
+    </header>
+
+    <div class="container">
+        <!-- Dashboard Metrics -->
+        <div class="dashboard-grid" id="dashboardMetrics">
+            <div class="metric-card total">
+                <div class="metric-value" id="totalChamados">-</div>
+                <div class="metric-label">Total de Chamados</div>
+            </div>
+            <div class="metric-card critical">
+                <div class="metric-value" id="chamadosCriticos">-</div>
+                <div class="metric-label">Chamados Críticos</div>
+            </div>
+            <div class="metric-card resolved">
+                <div class="metric-value" id="chamadosHoje">-</div>
+                <div class="metric-label">Novos Hoje</div>
+            </div>
+            <div class="metric-card average">
+                <div class="metric-value" id="tempoMedio">-</div>
+                <div class="metric-label">Tempo Médio (horas)</div>
+            </div>
+        </div>
+
+        <!-- Chamados List -->
+        <div class="content-section">
+            <h2 class="section-title">📋 Lista de Chamados</h2>
+            
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Status:</label>
+                    <select id="filtroStatus" multiple>
+                        <option value="Aberto">Aberto</option>
+                        <option value="Em análise">Em análise</option>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Resolvido">Resolvido</option>
+                        <option value="Fechado">Fechado</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Criticidade:</label>
+                    <select id="filtroCriticidade" multiple>
+                        <option value="Baixa">Baixa</option>
+                        <option value="Média">Média</option>
+                        <option value="Alta">Alta</option>
+                        <option value="Crítica">Crítica</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Cliente:</label>
+                    <input type="text" id="filtroCliente" placeholder="Nome do cliente...">
+                </div>
+                <div class="filter-group">
+                    <label>Busca:</label>
+                    <input type="text" id="filtroBusca" placeholder="Buscar por texto...">
+                </div>
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-primary" onclick="carregarChamados()">🔍 Filtrar</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Nº WEX</th>
+                            <th>Cliente</th>
+                            <th>Descrição</th>
+                            <th>Status</th>
+                            <th>Criticidade</th>
+                            <th>Criado em</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="chamadosTableBody">
+                        <tr>
+                            <td colspan="7" class="loading">Carregando chamados...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="pagination" class="pagination"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let currentPage = 1;
+        let pageSize = 10;
+
+        // Carregamento inicial
+        document.addEventListener('DOMContentLoaded', function() {
+            carregarDashboard();
+            carregarChamados();
+        });
+
+        async function carregarDashboard() {
+            try {
+                const response = await fetch(`${API_BASE}/dashboard/metricas`);
+                const data = await response.json();
+                
+                // Calcular total de chamados
+                const totalChamados = Object.values(data.total_chamados_por_status || {}).reduce((a, b) => a + b, 0);
+                
+                document.getElementById('totalChamados').textContent = totalChamados;
+                document.getElementById('chamadosCriticos').textContent = data.chamados_criticos_abertos || 0;
+                document.getElementById('chamadosHoje').textContent = data.chamados_novos_hoje || 0;
+                
+                const tempoMedio = data.tempo_medio_resolucao;
+                document.getElementById('tempoMedio').textContent = tempoMedio 
+                    ? tempoMedio.toFixed(1) 
+                    : 'N/A';
+                    
+            } catch (error) {
+                console.error('Erro ao carregar dashboard:', error);
+            }
+        }
+
+        async function carregarChamados() {
+            try {
+                const params = new URLSearchParams();
+                params.append('skip', (currentPage - 1) * pageSize);
+                params.append('limit', pageSize);
+                
+                // Filtros
+                const status = Array.from(document.getElementById('filtroStatus').selectedOptions).map(opt => opt.value);
+                const criticidade = Array.from(document.getElementById('filtroCriticidade').selectedOptions).map(opt => opt.value);
+                const cliente = document.getElementById('filtroCliente').value.trim();
+                const busca = document.getElementById('filtroBusca').value.trim();
+                
+                status.forEach(s => params.append('status', s));
+                criticidade.forEach(c => params.append('criticidade', c));
+                if (cliente) params.append('cliente', cliente);
+                if (busca) params.append('busca_texto', busca);
+                
+                const response = await fetch(`${API_BASE}/chamados?${params}`);
+                const data = await response.json();
+                
+                renderizarChamados(data.chamados);
+                renderizarPaginacao(data.page, data.pages, data.total);
+                
+            } catch (error) {
+                console.error('Erro ao carregar chamados:', error);
+                document.getElementById('chamadosTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="error">Erro ao carregar chamados</td></tr>';
+            }
+        }
+
+        function renderizarChamados(chamados) {
+            const tbody = document.getElementById('chamadosTableBody');
+            
+            if (!chamados || chamados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="loading">Nenhum chamado encontrado</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = chamados.map(chamado => `
+                <tr>
+                    <td><strong>${chamado.numero_wex}</strong></td>
+                    <td>${chamado.cliente_solicitante}</td>
+                    <td title="${chamado.descricao}">${truncarTexto(chamado.descricao, 50)}</td>
+                    <td><span class="status-badge status-${chamado.status.toLowerCase().replace(' ', '-')}">${chamado.status}</span></td>
+                    <td><span class="criticidade-badge criticidade-${chamado.criticidade.toLowerCase()}">${chamado.criticidade}</span></td>
+                    <td>${formatarData(chamado.data_criacao)}</td>
+                    <td>${chamado.score_qualidade}%</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderizarPaginacao(currentPage, totalPages, totalItems) {
+            const pagination = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            let paginationHtml = '';
+            
+            // Botão anterior
+            paginationHtml += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="irParaPagina(${currentPage - 1})">‹ Anterior</button>`;
+            
+            // Páginas
+            for (let i = 1; i <= Math.min(totalPages, 5); i++) {
+                paginationHtml += `<button class="${i === currentPage ? 'active' : ''}" onclick="irParaPagina(${i})">${i}</button>`;
+            }
+            
+            if (totalPages > 5) {
+                paginationHtml += '<button disabled>...</button>';
+                paginationHtml += `<button onclick="irParaPagina(${totalPages})">${totalPages}</button>`;
+            }
+            
+            // Botão próximo
+            paginationHtml += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="irParaPagina(${currentPage + 1})">Próximo ›</button>`;
+            
+            pagination.innerHTML = paginationHtml;
+        }
+
+        function irParaPagina(page) {
+            currentPage = page;
+            carregarChamados();
+        }
+
+        function truncarTexto(texto, limite) {
+            return texto.length > limite ? texto.substring(0, limite) + '...' : texto;
+        }
+
+        function formatarData(dataISO) {
+            const data = new Date(dataISO);
+            return data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+        }
+
+        // Auto-refresh a cada 30 segundos
+        setInterval(() => {
+            carregarDashboard();
+            carregarChamados();
+        }, 30000);
+    </script>
+</body>
+</html>

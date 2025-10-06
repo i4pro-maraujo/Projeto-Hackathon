@@ -16,8 +16,8 @@
   - [x] Executar `npx create-react-app frontend`
   - [x] Instalar dependências principais (Material-UI, Axios, Chart.js)
   - [x] Configurar package.json
-- [ ] Configurar VS Code workspace
-- [ ] Testar execução inicial dos dois projetos
+- [x] Configurar VS Code workspace
+- [x] Testar execução inicial dos dois projetos
 
 ### **💾 1.2 Modelagem de Dados**
 - [x] Criar modelo de dados Chamados

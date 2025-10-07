@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste API Chamados</title>
+</head>
+<body>
+    <h1>Teste API Chamados</h1>
+    <div id="resultado"></div>
+    
+    <script>
+        async function testarAPI() {
+            try {
+                console.log('🔍 Testando API de chamados...');
+                const response = await fetch('http://localhost:8000/chamados');
+                console.log('📡 Status:', response.status);
+                
+                const data = await response.json();
+                console.log('📊 Dados:', data);
+                
+                document.getElementById('resultado').innerHTML = `
+                    <h2>Resultado:</h2>
+                    <p>Status: ${response.status}</p>
+                    <p>Total: ${data.total}</p>
+                    <p>Páginas: ${data.pages}</p>
+                    <p>Chamados: ${data.chamados?.length || 0}</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                console.error('❌ Erro:', error);
+                document.getElementById('resultado').innerHTML = `<p style="color: red;">Erro: ${error.message}</p>`;
+            }
+        }
+        
+        // Executar teste ao carregar a página
+        window.onload = testarAPI;
+    </script>
+</body>
+</html>

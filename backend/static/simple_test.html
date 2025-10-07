@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WEX Intelligence - Sistema de Triagem Automática</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+</head>
+<body>
+    <h1>WEX Intelligence - Debug Version</h1>
+    <div id="chamadosTableBody"></div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        async function carregarChamados() {
+            try {
+                console.log('🔍 Iniciando carregamento de chamados...');
+                const response = await fetch(`${API_BASE}/chamados`);
+                console.log('📡 Status da resposta:', response.status);
+                
+                const data = await response.json();
+                console.log('📊 Dados recebidos:', data);
+                
+                const tbody = document.getElementById('chamadosTableBody');
+                if (data.chamados && data.chamados.length > 0) {
+                    tbody.innerHTML = `<p>✅ ${data.chamados.length} chamados carregados!</p>`;
+                } else {
+                    tbody.innerHTML = '<p>❌ Nenhum chamado encontrado</p>';
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro ao carregar chamados:', error);
+                document.getElementById('chamadosTableBody').innerHTML = '<p>❌ Erro ao carregar dados</p>';
+            }
+        }
+        
+        // Carregar dados ao inicializar
+        window.addEventListener('DOMContentLoaded', carregarChamados);
+    </script>
+</body>
+</html>

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WEX Intelligence - Sistema de Triagem Automática</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <style>
         * {
             margin: 0;
@@ -71,6 +72,275 @@
             font-size: 0.9rem;
         }
 
+        /* Estilos para Dashboard Avançado */
+        .dashboard-advanced {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            position: relative;
+            height: 400px;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .chart-canvas {
+            max-height: 300px;
+            width: 100% !important;
+            height: 300px !important;
+        }
+
+        .sla-indicators {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .sla-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            border-top: 3px solid;
+        }
+
+        .sla-card.green { border-top-color: #2ecc71; }
+        .sla-card.yellow { border-top-color: #f39c12; }
+        .sla-card.red { border-top-color: #e74c3c; }
+
+        .sla-time {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 0.3rem;
+        }
+
+        .sla-label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        /* Indicadores de alerta */
+        .alert-badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+
+        .alert-badge.critical {
+            background-color: #e74c3c;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .alert-badge.warning {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .alert-badge.info {
+            background-color: #3498db;
+            color: white;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Loading states */
+        .loading-skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 2s infinite;
+            border-radius: 4px;
+            height: 20px;
+            margin-bottom: 0.5rem;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Modal para visualização detalhada */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 2% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .chamado-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .detail-item {
+            padding: 0.8rem;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 3px solid #3498db;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .detail-value {
+            color: #333;
+            font-size: 1rem;
+        }
+
+        .followups-section {
+            margin-top: 2rem;
+        }
+
+        .followup-timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .followup-timeline::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #ddd;
+        }
+
+        .followup-item {
+            position: relative;
+            margin-bottom: 1.5rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .followup-item::before {
+            content: '';
+            position: absolute;
+            left: -1.8rem;
+            top: 1rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #3498db;
+            border: 2px solid white;
+        }
+
+        .followup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .followup-autor {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .followup-data {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .followup-tipo {
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .metric-trend {
+            font-size: 0.8rem;
+            margin-top: 0.3rem;
+        }
+
+        .trend-up {
+            color: #2ecc71;
+        }
+
+        .trend-down {
+            color: #e74c3c;
+        }
+
+        .trend-stable {
+            color: #95a5a6;
+        }
+
         .content-section {
             background: white;
             border-radius: 10px;
@@ -128,6 +398,15 @@
 
         .btn-primary:hover {
             background-color: #2980b9;
+        }
+
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
         }
 
         .table-container {
@@ -220,13 +499,891 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            max-width: 350px;
+        }
+        
+        .toast {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            margin-bottom: 10px;
+            padding: 16px;
+            border-left: 4px solid;
+            animation: slideInRight 0.3s ease-out;
+            opacity: 0;
+            transform: translateX(100%);
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .toast.toast-success {
+            border-left-color: #28a745;
+        }
+        
+        .toast.toast-error {
+            border-left-color: #dc3545;
+        }
+        
+        .toast.toast-warning {
+            border-left-color: #ffc107;
+        }
+        
+        .toast.toast-info {
+            border-left-color: #17a2b8;
+        }
+        
+        .toast-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .toast-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .toast-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #6c757d;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .toast-close:hover {
+            color: #343a40;
+        }
+        
+        .toast-body {
+            font-size: 13px;
+            color: #6c757d;
+            line-height: 1.4;
+        }
+        
+        /* Badges para Chamados */
+        .chamado-badges {
+            display: flex;
+            gap: 4px;
+            margin-top: 4px;
+        }
+        
+        .badge {
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge-critico-vencido {
+            background: #dc3545;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        
+        .badge-critico-proximo {
+            background: #fd7e14;
+            color: white;
+        }
+        
+        .badge-novo {
+            background: #007bff;
+            color: white;
+        }
+        
+        .badge-sla-ok {
+            background: #28a745;
+            color: white;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        
+        /* Contador de Notificações no Header */
+        .notification-counter {
+            position: relative;
+            display: inline-block;
+            margin-left: 20px;
+        }
+        
+        .notification-bell {
+            font-size: 20px;
+            color: #6c757d;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        
+        .notification-bell:hover {
+            color: #007bff;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+        }
+        
+        .notification-badge.hidden {
+            display: none;
+        }
+        
+        /* Alertas Visuais */
+        .alert-banner {
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+            color: white;
+            padding: 12px 20px;
+            text-align: center;
+            font-weight: 600;
+            animation: slideDown 0.5s ease-out;
+        }
+        
+        .alert-banner.warning {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+            color: #212529;
+        }
+        
+        .alert-banner.info {
+            background: linear-gradient(135deg, #17a2b8, #007bff);
+        }
+        
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Estados de Loading */
+        .loading-state {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .loading-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e9ecef;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .filters {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .pagination {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .modal-content {
+                margin: 10px;
+                max-width: calc(100vw - 20px);
+            }
+            
+            .toast-container {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+            
+            /* Mobile: Esconder colunas menos importantes */
+            .table th:nth-child(7),
+            .table td:nth-child(7),
+            .table th:nth-child(8),
+            .table td:nth-child(8) {
+                display: none;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .header p {
+                font-size: 0.9rem;
+            }
+            
+            .notification-counter {
+                margin-left: 10px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            /* Mobile small: Ainda menos colunas */
+            .table th:nth-child(5),
+            .table td:nth-child(5),
+            .table th:nth-child(6),
+            .table td:nth-child(6) {
+                display: none;
+            }
+            
+            .metric-card {
+                padding: 15px;
+            }
+            
+            .metric-value {
+                font-size: 1.8rem;
+            }
+            
+            .dashboard-grid.avancado {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+        
+        @media (min-width: 769px) and (max-width: 1024px) {
+            /* Tablet */
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+            
+            .dashboard-grid.avancado {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (min-width: 1025px) {
+            /* Desktop */
+            .dashboard-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .dashboard-grid.avancado {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 25px;
+            }
+        }
+        
+        /* Animações e Transições */
+        * {
+            transition: all 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .table tr:hover {
+            background-color: #f8f9fa;
+            transform: scale(1.01);
+        }
+        
+        .clickable-row {
+            cursor: pointer;
+        }
+        
+        .clickable-row:hover {
+            background-color: #e3f2fd !important;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .chart-container:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Skeleton Loading */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+        
+        .skeleton-text {
+            height: 20px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        
+        .skeleton-card {
+            height: 100px;
+            border-radius: 8px;
+        }
+        
+        /* Estados de Botões */
+        .btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .btn.loading {
+            color: transparent;
+            pointer-events: none;
+        }
+        
+        .btn.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            margin: -8px 0 0 -8px;
+            border: 2px solid #fff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        .btn.success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        
+        .btn.error {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+        
+        /* Acessibilidade */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        button:focus,
+        input:focus,
+        select:focus {
+            outline: 2px solid #007bff;
+            outline-offset: 2px;
+        }
+        
+        /* High Contrast Mode */
+        @media (prefers-contrast: high) {
+            .metric-card {
+                border: 2px solid #000;
+            }
+            
+            .status-badge,
+            .criticidade-badge {
+                border: 1px solid #000;
+            }
+        }
+        
+        /* Highlight de busca */
+        .highlight, .search-highlight {
+            background: #ffeb3b;
+            padding: 1px 2px;
+            border-radius: 2px;
+            font-weight: bold;
+        }
+        
+        /* Modal Aprimorado */
+        .modal-content-enhanced {
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header-enhanced {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 2px solid #e9ecef;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .modal-title-enhanced {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .chamado-score-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .score-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: white;
+            position: relative;
+        }
+        
+        .score-circle.score-alto {
+            background: conic-gradient(#28a745 0deg 252deg, #e9ecef 252deg 360deg);
+        }
+        
+        .score-circle.score-medio {
+            background: conic-gradient(#ffc107 0deg 216deg, #e9ecef 216deg 360deg);
+        }
+        
+        .score-circle.score-baixo {
+            background: conic-gradient(#dc3545 0deg 180deg, #e9ecef 180deg 360deg);
+        }
+        
+        .score-circle::before {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            z-index: 1;
+        }
+        
+        .score-text {
+            position: relative;
+            z-index: 2;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .modal-body-enhanced {
+            padding: 0;
+        }
+        
+        .chamado-info-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        .info-principais {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .info-lateral {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .info-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .info-card h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .timeline-vertical {
+            position: relative;
+            padding-left: 30px;
+            margin-top: 20px;
+        }
+        
+        .timeline-vertical::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dee2e6;
+        }
+        
+        .timeline-item-enhanced {
+            position: relative;
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .timeline-item-enhanced::before {
+            content: '';
+            position: absolute;
+            left: -22px;
+            top: 15px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #007bff;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #007bff;
+        }
+        
+        .timeline-item-enhanced.tipo-desenvolvimento::before {
+            background: #28a745;
+            box-shadow: 0 0 0 2px #28a745;
+        }
+        
+        .timeline-item-enhanced.tipo-analise::before {
+            background: #ffc107;
+            box-shadow: 0 0 0 2px #ffc107;
+        }
+        
+        .timeline-item-enhanced.tipo-outros::before {
+            background: #6c757d;
+            box-shadow: 0 0 0 2px #6c757d;
+        }
+        
+        .timeline-header-enhanced {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .timeline-tipo-enhanced {
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .timeline-data-enhanced {
+            color: #6c757d;
+            font-size: 0.8rem;
+        }
+        
+        .timeline-conteudo-enhanced {
+            color: #495057;
+            line-height: 1.5;
+        }
+        
+        .modal-actions {
+            padding: 20px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-action {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary-action {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-secondary-action {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-success-action {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        /* Anexos Simulados */
+        .anexos-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .anexos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .anexo-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .anexo-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .anexo-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+        
+        .anexo-nome {
+            font-size: 0.8rem;
+            text-align: center;
+            color: #495057;
+            word-break: break-word;
+        }
+        
+        .anexo-tamanho {
+            font-size: 0.7rem;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+        
+        /* Preview de Imagem */
+        .image-preview-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+        }
+        
+        .image-preview-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+        
+        .image-preview-content img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 8px;
+        }
+        
+        .image-preview-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+        
+        /* Paginação Avançada */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .pagination-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .pagination-btn {
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            background: white;
+            color: #495057;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .pagination-btn:hover:not(:disabled) {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .pagination-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        
+        .page-size-selector {
+            padding: 6px 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            background: white;
+        }
+        
+        .pagination-stats {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .search-operators {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+        
+        .search-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .search-results-count {
+            font-weight: 600;
+        }
+        
+        /* Reduced Motion */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
 </head>
 <body>
     <header class="header">
-        <h1>🎯 WEX Intelligence</h1>
-        <p>Sistema de Triagem Automática de Chamados</p>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1>🎯 WEX Intelligence</h1>
+                <p>Sistema de Triagem Automática de Chamados</p>
+            </div>
+            <div class="notification-counter">
+                <span class="notification-bell" onclick="toggleNotificationPanel()" title="Notificações">🔔</span>
+                <span class="notification-badge hidden" id="notificationBadge">0</span>
+            </div>
+        </div>
     </header>
+
+    <!-- Alert Banner -->
+    <div id="alertBanner" class="alert-banner" style="display: none;"></div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
 
     <div class="container">
         <!-- Dashboard Metrics -->
@@ -246,6 +1403,47 @@
             <div class="metric-card average">
                 <div class="metric-value" id="tempoMedio">-</div>
                 <div class="metric-label">Tempo Médio (horas)</div>
+            </div>
+        </div>
+
+        <!-- Dashboard Avançado com Gráficos -->
+        <div class="content-section">
+            <h2 class="section-title">📊 Dashboard Avançado</h2>
+            
+            <!-- Indicadores de SLA -->
+            <div class="sla-indicators">
+                <div class="sla-card green">
+                    <div class="sla-time" id="slaOk">-</div>
+                    <div class="sla-label">Dentro do SLA</div>
+                </div>
+                <div class="sla-card yellow">
+                    <div class="sla-time" id="slaWarning">-</div>
+                    <div class="sla-label">Próximo ao Vencimento</div>
+                </div>
+                <div class="sla-card red">
+                    <div class="sla-time" id="slaExpired">-</div>
+                    <div class="sla-label">SLA Vencido</div>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="dashboard-advanced">
+                <div class="chart-container">
+                    <div class="chart-title">📈 Distribuição por Status</div>
+                    <canvas id="statusChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">🔥 Distribuição por Criticidade</div>
+                    <canvas id="criticidadeChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">📅 Volume por Dia (Últimos 7 dias)</div>
+                    <canvas id="volumeChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">⏱️ Tendência de Resolução</div>
+                    <canvas id="tendenciaChart" class="chart-canvas"></canvas>
+                </div>
             </div>
         </div>
 
@@ -275,15 +1473,32 @@
                 </div>
                 <div class="filter-group">
                     <label>Cliente:</label>
-                    <input type="text" id="filtroCliente" placeholder="Nome do cliente...">
+                    <select id="filtroClienteDropdown">
+                        <option value="">Todos os clientes</option>
+                    </select>
                 </div>
                 <div class="filter-group">
-                    <label>Busca:</label>
-                    <input type="text" id="filtroBusca" placeholder="Buscar por texto...">
+                    <label>Data Início:</label>
+                    <input type="date" id="filtroDataInicio">
+                </div>
+                <div class="filter-group">
+                    <label>Data Fim:</label>
+                    <input type="date" id="filtroDataFim">
+                </div>
+                <div class="filter-group">
+                    <label>Busca Avançada:</label>
+                    <input type="text" id="filtroBusca" placeholder="Buscar em descrição e follow-ups...">
+                    <div class="search-operators">
+                        Use operadores: <span class="search-highlight">"termo1 AND termo2"</span>, <span class="search-highlight">"termo1 OR termo2"</span>, <span class="search-highlight">"termo exato"</span>
+                    </div>
                 </div>
                 <div class="filter-group">
                     <label>&nbsp;</label>
                     <button class="btn btn-primary" onclick="carregarChamados()">🔍 Filtrar</button>
+                </div>
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-secondary" onclick="limparFiltros()">🗑️ Limpar</button>
                 </div>
             </div>
 
@@ -291,52 +1506,679 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Nº WEX</th>
-                            <th>Cliente</th>
-                            <th>Descrição</th>
-                            <th>Status</th>
-                            <th>Criticidade</th>
-                            <th>Criado em</th>
-                            <th>Score</th>
+                            <th onclick="ordenarPor('numero_wex')" style="cursor: pointer;">Nº WEX ⇅</th>
+                            <th onclick="ordenarPor('cliente_solicitante')" style="cursor: pointer;">Cliente ⇅</th>
+                            <th onclick="ordenarPor('descricao')" style="cursor: pointer;">Descrição ⇅</th>
+                            <th onclick="ordenarPor('status')" style="cursor: pointer;">Status ⇅</th>
+                            <th onclick="ordenarPor('criticidade')" style="cursor: pointer;">Criticidade ⇅</th>
+                            <th onclick="ordenarPor('data_criacao')" style="cursor: pointer;">Criado em ⇅</th>
+                            <th onclick="ordenarPor('score_qualidade')" style="cursor: pointer;">Score ⇅</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="chamadosTableBody">
                         <tr>
-                            <td colspan="7" class="loading">Carregando chamados...</td>
+                            <td colspan="8" class="loading">Carregando chamados...</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
-            <div id="pagination" class="pagination"></div>
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    <div class="pagination-stats" id="paginationStats">
+                        Mostrando 0-0 de 0 resultados
+                    </div>
+                    <div>
+                        <label for="pageSize">Itens por página:</label>
+                        <select id="pageSize" class="page-size-selector" onchange="mudarTamanhoPagina()">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="pagination-controls" id="paginationControls">
+                    <button class="pagination-btn" id="btnPrimeira" onclick="irParaPagina(1)" disabled>⏮️</button>
+                    <button class="pagination-btn" id="btnAnterior" onclick="paginaAnterior()" disabled>⬅️</button>
+                    <span id="paginasNumeros"></span>
+                    <button class="pagination-btn" id="btnProxima" onclick="proximaPagina()" disabled>➡️</button>
+                    <button class="pagination-btn" id="btnUltima" onclick="irParaUltimaPagina()" disabled>⏭️</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes do Chamado -->
+    <div id="modalChamado" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitulo">Detalhes do Chamado</h2>
+                <span class="close" onclick="fecharModal()">&times;</span>
+            </div>
+            
+            <div class="chamado-details" id="chamadoDetails">
+                <!-- Conteúdo será preenchido dinamicamente -->
+            </div>
+            
+            <div class="followups-section">
+                <h3>📝 Follow-ups</h3>
+                <div class="followup-timeline" id="followupTimeline">
+                    <!-- Timeline será preenchida dinamicamente -->
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         const API_BASE = 'http://localhost:8000';
-        let currentPage = 1;
-        let pageSize = 10;
+        let currentSort = null;
+        let sortDirection = 'asc';
 
         // Carregamento inicial
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('📱 DOM carregado, iniciando aplicação...');
+            
+            // Mostrar skeleton loading inicialmente
+            mostrarSkeletonDashboard();
+            mostrarSkeletonTabela();
+            
+            // Carregar dados
+            console.log('🔄 Iniciando carregamento de dados...');
             carregarDashboard();
+            console.log('📋 Chamando carregarChamados...');
             carregarChamados();
+            carregarListaClientes();
+            carregarClientesDropdown();
+            
+            // Aguardar um pouco e inicializar gráficos
+            setTimeout(() => {
+                console.log('🎨 Inicializando gráficos...');
+                inicializarTodosGraficos();
+            }, 1000);
+            
+            // Configurar UX e acessibilidade
+            melhorarAcessibilidade();
+            adicionarNavegacaoTeclado();
+            
+            // Event listeners para filtros
+            document.getElementById('filtroStatus').addEventListener('change', carregarChamados);
+            document.getElementById('filtroCriticidade').addEventListener('change', carregarChamados);
+            document.getElementById('filtroClienteDropdown').addEventListener('change', carregarChamados);
+            document.getElementById('filtroBusca').addEventListener('input', debounce(carregarChamados, 500));
+            document.getElementById('filtroDataInicio').addEventListener('change', carregarChamados);
+            document.getElementById('filtroDataFim').addEventListener('change', carregarChamados);
+            
+            // Mostrar toast de boas-vindas
+            setTimeout(() => {
+                mostrarToast('success', 'Sistema Carregado', 'WEX Intelligence está pronto para uso!');
+            }, 1000);
         });
+        
+        // Skeleton Loading para Dashboard
+        function mostrarSkeletonDashboard() {
+            const metricas = document.getElementById('dashboardMetrics');
+            metricas.innerHTML = `
+                <div class="metric-card skeleton skeleton-card"></div>
+                <div class="metric-card skeleton skeleton-card"></div>
+                <div class="metric-card skeleton skeleton-card"></div>
+                <div class="metric-card skeleton skeleton-card"></div>
+            `;
+        }
+        
+        // Skeleton Loading para Tabela
+        function mostrarSkeletonTabela() {
+            const tbody = document.getElementById('chamadosTableBody');
+            const skeletonRows = Array(5).fill().map(() => `
+                <tr>
+                    <td><div class="skeleton skeleton-text"></div></td>
+                    <td><div class="skeleton skeleton-text"></div></td>
+                    <td><div class="skeleton skeleton-text"></div></td>
+                    <td><div class="skeleton skeleton-text"></div></td>
+                    <td><div class="skeleton skeleton-text"></div></td>
+                    <td><div class="skeleton skeleton-text"></div></td>
+                    <td><div class="skeleton skeleton-text"></div></td>
+                    <td><div class="skeleton skeleton-text"></div></td>
+                </tr>
+            `).join('');
+            
+            tbody.innerHTML = skeletonRows;
+        }
+        
+        // Adicionar ARIA labels e melhorar acessibilidade
+        function melhorarAcessibilidade() {
+            // Adicionar labels para elementos importantes
+            const filtroStatus = document.getElementById('filtroStatus');
+            if (filtroStatus) {
+                filtroStatus.setAttribute('aria-label', 'Filtrar por status do chamado');
+            }
+            
+            const filtroCriticidade = document.getElementById('filtroCriticidade');
+            if (filtroCriticidade) {
+                filtroCriticidade.setAttribute('aria-label', 'Filtrar por criticidade do chamado');
+            }
+            
+            const filtroBusca = document.getElementById('filtroBusca');
+            if (filtroBusca) {
+                filtroBusca.setAttribute('aria-label', 'Buscar chamados por texto');
+                filtroBusca.setAttribute('placeholder', 'Digite para buscar...');
+            }
+            
+            // Adicionar roles ARIA
+            const tabela = document.querySelector('.table');
+            if (tabela) {
+                tabela.setAttribute('role', 'table');
+                tabela.setAttribute('aria-label', 'Lista de chamados');
+            }
+            
+            // Tornar elementos clicáveis acessíveis via teclado
+            document.querySelectorAll('.clickable-row').forEach(row => {
+                row.setAttribute('tabindex', '0');
+                row.setAttribute('role', 'button');
+                row.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.click();
+                    }
+                });
+            });
+        }
+        
+        // Estados visuais para botões
+        function aplicarEstadoBotao(botao, estado, duracao = 2000) {
+            const estadosAnteriores = ['loading', 'success', 'error'];
+            estadosAnteriores.forEach(est => botao.classList.remove(est));
+            
+            if (estado !== 'normal') {
+                botao.classList.add(estado);
+                
+                if (estado === 'success' || estado === 'error') {
+                    setTimeout(() => {
+                        botao.classList.remove(estado);
+                    }, duracao);
+                }
+            }
+        }
+        
+        // Confirmação para ações importantes
+        function confirmarAcao(mensagem, callback) {
+            if (confirm(mensagem)) {
+                callback();
+            }
+        }
+        
+        // Adicionar suporte a navegação por teclado
+        function adicionarNavegacaoTeclado() {
+            document.addEventListener('keydown', function(e) {
+                // Esc para fechar modais
+                if (e.key === 'Escape') {
+                    const modal = document.querySelector('.modal.show');
+                    if (modal) {
+                        fecharModal();
+                    }
+                }
+                
+                // Ctrl+F para focar na busca
+                if (e.ctrlKey && e.key === 'f') {
+                    e.preventDefault();
+                    const busca = document.getElementById('filtroBusca');
+                    if (busca) {
+                        busca.focus();
+                    }
+                }
+            });
+        }
+        
+        // Busca textual avançada com operadores
+        function processarBuscaAvancada(texto, chamados) {
+            if (!texto.trim()) return chamados;
+            
+            const textoLower = texto.toLowerCase();
+            let resultados = [];
+            
+            // Processar operadores AND, OR e aspas
+            if (textoLower.includes(' and ')) {
+                const termos = textoLower.split(' and ').map(t => t.trim());
+                resultados = chamados.filter(chamado => {
+                    return termos.every(termo => 
+                        buscarEmChamado(chamado, termo)
+                    );
+                });
+            } else if (textoLower.includes(' or ')) {
+                const termos = textoLower.split(' or ').map(t => t.trim());
+                resultados = chamados.filter(chamado => {
+                    return termos.some(termo => 
+                        buscarEmChamado(chamado, termo)
+                    );
+                });
+            } else if (texto.startsWith('"') && texto.endsWith('"')) {
+                // Busca exata
+                const termoExato = texto.slice(1, -1);
+                resultados = chamados.filter(chamado => 
+                    buscarEmChamado(chamado, termoExato, true)
+                );
+            } else {
+                // Busca simples
+                resultados = chamados.filter(chamado => 
+                    buscarEmChamado(chamado, textoLower)
+                );
+            }
+            
+            return resultados;
+        }
+        
+        // Buscar termo em chamado e follow-ups
+        function buscarEmChamado(chamado, termo, exato = false) {
+            const textos = [
+                chamado.descricao,
+                chamado.cliente_solicitante,
+                chamado.numero_wex,
+                ...(chamado.followups || []).map(f => f.descricao)
+            ].join(' ').toLowerCase();
+            
+            if (exato) {
+                return textos.includes(termo.toLowerCase());
+            } else {
+                return textos.includes(termo);
+            }
+        }
+        
+        // Highlight de termos de busca
+        function aplicarHighlight(texto, termoBusca) {
+            if (!termoBusca.trim()) return texto;
+            
+            let termos = [];
+            const termoBuscaLower = termoBusca.toLowerCase();
+            
+            // Processar operadores para highlight
+            if (termoBuscaLower.includes(' and ')) {
+                termos = termoBuscaLower.split(' and ').map(t => t.trim());
+            } else if (termoBuscaLower.includes(' or ')) {
+                termos = termoBuscaLower.split(' or ').map(t => t.trim());
+            } else if (termoBusca.startsWith('"') && termoBusca.endsWith('"')) {
+                termos = [termoBusca.slice(1, -1)];
+            } else {
+                termos = [termoBuscaLower];
+            }
+            
+            let textoHighlight = texto;
+            termos.forEach(termo => {
+                if (termo.trim()) {
+                    const regex = new RegExp(`(${termo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                    textoHighlight = textoHighlight.replace(regex, '<span class="highlight">$1</span>');
+                }
+            });
+            
+            return textoHighlight;
+        }
+        
+        // Função debounce para busca
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Função para abrir modal de detalhes aprimorado
+        async function abrirModalDetalhes(id) {
+            try {
+                const response = await fetch(`${API_BASE}/chamados/${id}`);
+                const chamado = await response.json();
+                
+                const followupsResponse = await fetch(`${API_BASE}/chamados/${id}/followups`);
+                const followups = await followupsResponse.json();
+                
+                const score = parseInt(chamado.score_qualidade);
+                const scoreClass = score >= 8 ? 'score-alto' : score >= 6 ? 'score-medio' : 'score-baixo';
+                
+                const modal = document.getElementById('chamadoModal');
+                modal.innerHTML = `
+                    <div class="modal-content modal-content-enhanced">
+                        <div class="modal-header-enhanced">
+                            <div>
+                                <h2 class="modal-title-enhanced">Chamado ${chamado.numero_wex}</h2>
+                                <small style="opacity: 0.8;">${chamado.cliente_solicitante}</small>
+                            </div>
+                            <div class="chamado-score-display">
+                                <div class="score-circle ${scoreClass}">
+                                    <span class="score-text">${score}%</span>
+                                </div>
+                                <button class="close" onclick="fecharModal()">&times;</button>
+                            </div>
+                        </div>
+                        
+                        <div class="modal-body-enhanced">
+                            <div class="chamado-info-grid">
+                                <div class="info-principais">
+                                    <h3 style="margin-top: 0; color: #495057;">Descrição do Chamado</h3>
+                                    <p style="line-height: 1.6; color: #6c757d;">${chamado.descricao}</p>
+                                    
+                                    <div class="timeline-vertical">
+                                        <h4 style="color: #495057; margin-bottom: 15px;">📋 Histórico de Follow-ups</h4>
+                                        ${followups.map(followup => `
+                                            <div class="timeline-item-enhanced tipo-${followup.tipo.toLowerCase()}">
+                                                <div class="timeline-header-enhanced">
+                                                    <span class="timeline-tipo-enhanced">${followup.tipo}</span>
+                                                    <span class="timeline-data-enhanced">${formatarData(followup.data_criacao)}</span>
+                                                </div>
+                                                <div class="timeline-conteudo-enhanced">${followup.descricao}</div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                
+                                <div class="info-lateral">
+                                    <div class="info-card">
+                                        <h4>📊 Status & Criticidade</h4>
+                                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                            <span class="status-badge status-${chamado.status.toLowerCase().replace(' ', '-')}">${chamado.status}</span>
+                                            <span class="criticidade-badge criticidade-${chamado.criticidade.toLowerCase()}">${chamado.criticidade}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="info-card">
+                                        <h4>📅 Datas Importantes</h4>
+                                        <div style="font-size: 0.9rem; line-height: 1.5;">
+                                            <div><strong>Abertura:</strong><br>${formatarData(chamado.data_criacao)}</div>
+                                            <div style="margin-top: 8px;"><strong>Última Atualização:</strong><br>${formatarData(chamado.data_ultima_atualizacao || chamado.data_criacao)}</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="info-card">
+                                        <h4>🎯 Métricas de Qualidade</h4>
+                                        <div style="text-align: center;">
+                                            <div style="font-size: 2rem; font-weight: bold; color: ${score >= 8 ? '#28a745' : score >= 6 ? '#ffc107' : '#dc3545'};">
+                                                ${score}%
+                                            </div>
+                                            <div style="font-size: 0.8rem; color: #6c757d; margin-top: 5px;">
+                                                Score de Qualidade
+                                            </div>
+                                            <div style="margin-top: 10px; font-size: 0.9rem;">
+                                                <div>✅ Ambiente: ${chamado.ambiente_informado ? 'Informado' : 'Não informado'}</div>
+                                                <div>📎 Anexos: ${chamado.possui_anexos ? 'Presentes' : 'Ausentes'}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="anexos-section">
+                            <h4>📎 Anexos do Chamado</h4>
+                            <div class="anexos-grid" id="anexos-${chamado.id}">
+                                ${renderizarAnexos(gerarAnexosSimulados())}
+                            </div>
+                        </div>
+                        
+                        <div class="modal-actions">
+                            <div>
+                                <button class="btn-action btn-primary-action" onclick="editarChamado(${chamado.id})">
+                                    ✏️ Editar Chamado
+                                </button>
+                                <button class="btn-action btn-success-action" onclick="adicionarFollowup(${chamado.id})">
+                                    ➕ Adicionar Follow-up
+                                </button>
+                            </div>
+                            <button class="btn-action btn-secondary-action" onclick="fecharModal()">
+                                ❌ Fechar
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                modal.style.display = 'flex';
+                modal.classList.add('show');
+                
+            } catch (error) {
+                console.error('Erro ao carregar detalhes:', error);
+                mostrarToast('error', 'Erro', 'Não foi possível carregar os detalhes do chamado.');
+            }
+        }
+        
+        // Função para fechar modal
+        function fecharModal() {
+            const modal = document.getElementById('chamadoModal');
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+        }
+        
+        // Funções auxiliares para ações do modal
+        function editarChamado(id) {
+            mostrarToast('info', 'Funcionalidade em Desenvolvimento', `Editar chamado ${id} será implementado no Dia 3.`);
+        }
+        
+        function adicionarFollowup(id) {
+            mostrarToast('info', 'Funcionalidade em Desenvolvimento', `Adicionar follow-up ao chamado ${id} será implementado no Dia 3.`);
+        }
+
+        // Variáveis globais para os gráficos
+        let statusChart, criticidadeChart, volumeChart, tendenciaChart;
+
+        // Função simplificada para inicializar todos os gráficos
+        async function inicializarTodosGraficos() {
+            console.log('🚀 Inicializando todos os gráficos...');
+            
+            try {
+                // Verificar se Chart.js está disponível
+                if (typeof Chart === 'undefined') {
+                    console.error('❌ Chart.js não está disponível');
+                    return;
+                }
+                
+                // Buscar dados das métricas
+                const responseMetricas = await fetch(`${API_BASE}/dashboard/metricas`);
+                const dadosMetricas = await responseMetricas.json();
+                console.log('📊 Dados das métricas:', dadosMetricas);
+                
+                // Criar gráfico de status
+                if (dadosMetricas.total_chamados_por_status) {
+                    console.log('📈 Criando gráfico de status...');
+                    criarGraficoStatusSimplificado(dadosMetricas.total_chamados_por_status);
+                }
+                
+                // Criar gráfico de criticidade
+                if (dadosMetricas.distribuicao_por_criticidade) {
+                    console.log('🔥 Criando gráfico de criticidade...');
+                    criarGraficoCriticidadeSimplificado(dadosMetricas.distribuicao_por_criticidade);
+                }
+                
+                // Criar gráfico de volume
+                console.log('📅 Criando gráfico de volume...');
+                await criarGraficoVolumeSimplificado();
+                
+                // Criar gráfico de tendência
+                console.log('⏱️ Criando gráfico de tendência...');
+                criarGraficoTendenciaSimplificado();
+                
+                console.log('✅ Todos os gráficos foram inicializados!');
+                
+            } catch (error) {
+                console.error('❌ Erro ao inicializar gráficos:', error);
+            }
+        }
+        
+        // Funções simplificadas para criar gráficos
+        function criarGraficoStatusSimplificado(dados) {
+            const canvas = document.getElementById('statusChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            if (window.statusChart && typeof window.statusChart.destroy === 'function') {
+                window.statusChart.destroy();
+            }
+            
+            window.statusChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(dados),
+                    datasets: [{
+                        data: Object.values(dados),
+                        backgroundColor: ['#3498db', '#f39c12', '#e74c3c', '#2ecc71', '#95a5a6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+        
+        function criarGraficoCriticidadeSimplificado(dados) {
+            const canvas = document.getElementById('criticidadeChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            if (window.criticidadeChart && typeof window.criticidadeChart.destroy === 'function') {
+                window.criticidadeChart.destroy();
+            }
+            
+            window.criticidadeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(dados),
+                    datasets: [{
+                        data: Object.values(dados),
+                        backgroundColor: ['#2ecc71', '#f39c12', '#e67e22', '#e74c3c']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+        
+        async function criarGraficoVolumeSimplificado() {
+            const canvas = document.getElementById('volumeChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            if (window.volumeChart && typeof window.volumeChart.destroy === 'function') {
+                window.volumeChart.destroy();
+            }
+            
+            // Dados simulados para os últimos 7 dias
+            const labels = ['01/10', '02/10', '03/10', '04/10', '05/10', '06/10', '07/10'];
+            const data = [8, 12, 6, 15, 10, 9, 14];
+            
+            window.volumeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Chamados Criados',
+                        data: data,
+                        backgroundColor: '#3498db'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        function criarGraficoTendenciaSimplificado() {
+            const canvas = document.getElementById('tendenciaChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            if (window.tendenciaChart && typeof window.tendenciaChart.destroy === 'function') {
+                window.tendenciaChart.destroy();
+            }
+            
+            window.tendenciaChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Sem -3', 'Sem -2', 'Sem -1', 'Atual'],
+                    datasets: [{
+                        label: 'Tempo Médio (horas)',
+                        data: [48, 52, 45, 38],
+                        borderColor: '#2ecc71',
+                        backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
 
         async function carregarDashboard() {
             try {
+                console.log('Carregando dashboard...', API_BASE);
+                
+                // Primeiro, restaurar o HTML correto dos cards (caso tenha sido sobrescrito pelo skeleton)
+                const metricas = document.getElementById('dashboardMetrics');
+                metricas.innerHTML = `
+                    <div class="metric-card total">
+                        <div class="metric-value" id="totalChamados">-</div>
+                        <div class="metric-label">Total de Chamados</div>
+                    </div>
+                    <div class="metric-card critical">
+                        <div class="metric-value" id="chamadosCriticos">-</div>
+                        <div class="metric-label">Chamados Críticos</div>
+                    </div>
+                    <div class="metric-card resolved">
+                        <div class="metric-value" id="chamadosHoje">-</div>
+                        <div class="metric-label">Novos Hoje</div>
+                    </div>
+                    <div class="metric-card average">
+                        <div class="metric-value" id="tempoMedio">-</div>
+                        <div class="metric-label">Tempo Médio (horas)</div>
+                    </div>
+                `;
+                
                 const response = await fetch(`${API_BASE}/dashboard/metricas`);
                 const data = await response.json();
+                console.log('Dados do dashboard recebidos:', data);
                 
                 // Calcular total de chamados
                 const totalChamados = Object.values(data.total_chamados_por_status || {}).reduce((a, b) => a + b, 0);
+                console.log('Total de chamados calculado:', totalChamados);
                 
-                document.getElementById('totalChamados').textContent = totalChamados;
-                document.getElementById('chamadosCriticos').textContent = data.chamados_criticos_abertos || 0;
-                document.getElementById('chamadosHoje').textContent = data.chamados_novos_hoje || 0;
+                const elementoTotal = document.getElementById('totalChamados');
+                const elementoCriticos = document.getElementById('chamadosCriticos');
+                const elementoHoje = document.getElementById('chamadosHoje');
+                const elementoTempo = document.getElementById('tempoMedio');
+                
+                console.log('Elementos encontrados:', {
+                    totalChamados: elementoTotal,
+                    chamadosCriticos: elementoCriticos,
+                    chamadosHoje: elementoHoje,
+                    tempoMedio: elementoTempo
+                });
+                
+                if (elementoTotal) elementoTotal.textContent = totalChamados;
+                if (elementoCriticos) elementoCriticos.textContent = data.chamados_criticos_abertos || 0;
+                if (elementoHoje) elementoHoje.textContent = data.chamados_novos_hoje || 0;
                 
                 const tempoMedio = data.tempo_medio_resolucao;
-                document.getElementById('tempoMedio').textContent = tempoMedio 
+                if (elementoTempo) elementoTempo.textContent = tempoMedio 
                     ? tempoMedio.toFixed(1) 
                     : 'N/A';
                     
@@ -345,55 +2187,848 @@
             }
         }
 
+        async function carregarDashboardAvancado() {
+            try {
+                console.log('Carregando dashboard avançado...');
+                const response = await fetch(`${API_BASE}/dashboard/metricas`);
+                const data = await response.json();
+                console.log('Dados do dashboard avançado:', data);
+                
+                // Atualizar indicadores de SLA
+                await carregarIndicadoresSLA();
+                
+                // Criar gráficos
+                console.log('Criando gráficos...');
+                criarGraficoStatus(data.total_chamados_por_status || {});
+                criarGraficoCriticidade(data.distribuicao_por_criticidade || {});
+                await criarGraficoVolume();
+                await criarGraficoTendencia();
+                console.log('Gráficos criados com sucesso');
+                
+            } catch (error) {
+                console.error('Erro ao carregar dashboard avançado:', error);
+            }
+        }
+
+        async function carregarIndicadoresSLA() {
+            try {
+                console.log('🎯 Carregando indicadores SLA...');
+                // Buscar todos os chamados para calcular SLA
+                const response = await fetch(`${API_BASE}/chamados?limit=100`);
+                const data = await response.json();
+                console.log('📊 Dados recebidos para SLA:', data);
+                
+                const agora = new Date();
+                let slaOk = 0, slaWarning = 0, slaExpired = 0;
+                
+                // SLA por criticidade (em horas)
+                const slaHoras = {
+                    'Crítica': 4,
+                    'Alta': 8,
+                    'Média': 24,
+                    'Baixa': 48
+                };
+                
+                data.chamados.forEach(chamado => {
+                    // Pular chamados já resolvidos/fechados
+                    if (['Resolvido', 'Fechado'].includes(chamado.status)) return;
+                    
+                    let slaLimite;
+                    
+                    // Usar sla_limite se disponível, senão calcular baseado na criticidade
+                    if (chamado.sla_limite) {
+                        slaLimite = new Date(chamado.sla_limite);
+                    } else {
+                        const dataCriacao = new Date(chamado.data_criacao);
+                        const horasLimite = slaHoras[chamado.criticidade] || 24;
+                        slaLimite = new Date(dataCriacao.getTime() + horasLimite * 60 * 60 * 1000);
+                    }
+                    
+                    const diffHoras = (slaLimite - agora) / (1000 * 60 * 60);
+                    
+                    if (diffHoras < 0) {
+                        slaExpired++;
+                    } else if (diffHoras < 4) { // Próximo ao vencimento (menos de 4 horas)
+                        slaWarning++;
+                    } else {
+                        slaOk++;
+                    }
+                });
+                
+                console.log('📈 Contadores SLA calculados:', { slaOk, slaWarning, slaExpired });
+                
+                const elemSlaOk = document.getElementById('slaOk');
+                const elemSlaWarning = document.getElementById('slaWarning');
+                const elemSlaExpired = document.getElementById('slaExpired');
+                
+                console.log('🔍 Elementos SLA encontrados:', {
+                    slaOk: elemSlaOk,
+                    slaWarning: elemSlaWarning,
+                    slaExpired: elemSlaExpired
+                });
+                
+                if (elemSlaOk) elemSlaOk.textContent = slaOk;
+                if (elemSlaWarning) elemSlaWarning.textContent = slaWarning;
+                if (elemSlaExpired) elemSlaExpired.textContent = slaExpired;
+                
+                console.log('✅ Indicadores SLA atualizados com sucesso');
+                
+            } catch (error) {
+                console.error('❌ Erro ao carregar indicadores SLA:', error);
+            }
+        }
+
+        function criarGraficoStatus(dados) {
+            console.log('🎯 Criando gráfico de status com dados:', dados);
+            const ctx = document.getElementById('statusChart');
+            
+            if (!ctx) {
+                console.error('❌ Elemento statusChart não encontrado!');
+                return;
+            }
+            
+            console.log('✅ Canvas statusChart encontrado:', ctx);
+            
+            if (statusChart && typeof statusChart.destroy === 'function') {
+                console.log('🔄 Destruindo gráfico anterior');
+                statusChart.destroy();
+            }
+            
+            const labels = Object.keys(dados);
+            const values = Object.values(dados);
+            console.log('📊 Labels:', labels);
+            console.log('📊 Values:', values);
+            
+            if (labels.length === 0 || values.length === 0) {
+                console.error('❌ Dados vazios para o gráfico de status');
+                return;
+            }
+            
+            const colors = ['#3498db', '#f39c12', '#e74c3c', '#2ecc71', '#95a5a6'];
+            
+            try {
+                statusChart = new Chart(ctx.getContext('2d'), {
+                    type: 'pie',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: colors.slice(0, labels.length),
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                console.log('✅ Gráfico de status criado com sucesso:', statusChart);
+            } catch (error) {
+                console.error('❌ Erro ao criar gráfico de status:', error);
+            }
+        }
+
+        function criarGraficoCriticidade(dados) {
+            console.log('🎯 Criando gráfico de criticidade com dados:', dados);
+            const ctx = document.getElementById('criticidadeChart');
+            
+            if (!ctx) {
+                console.error('❌ Elemento criticidadeChart não encontrado!');
+                return;
+            }
+            
+            console.log('✅ Canvas criticidadeChart encontrado:', ctx);
+            
+            if (criticidadeChart && typeof criticidadeChart.destroy === 'function') {
+                console.log('🔄 Destruindo gráfico anterior');
+                criticidadeChart.destroy();
+            }
+            
+            const labels = Object.keys(dados);
+            const values = Object.values(dados);
+            console.log('📊 Labels:', labels);
+            console.log('📊 Values:', values);
+            
+            if (labels.length === 0 || values.length === 0) {
+                console.error('❌ Dados vazios para o gráfico de criticidade');
+                return;
+            }
+            
+            const colors = ['#2ecc71', '#f39c12', '#e67e22', '#e74c3c'];
+            
+            try {
+                criticidadeChart = new Chart(ctx.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: colors.slice(0, labels.length),
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                console.log('✅ Gráfico de criticidade criado com sucesso:', criticidadeChart);
+            } catch (error) {
+                console.error('❌ Erro ao criar gráfico de criticidade:', error);
+            }
+        }
+
+        async function criarGraficoVolume() {
+            try {
+                console.log('🎯 Criando gráfico de volume...');
+                const response = await fetch(`${API_BASE}/chamados?limit=100`);
+                const data = await response.json();
+                console.log('📊 Dados recebidos para volume:', data);
+                
+                // Agrupar por dia dos últimos 7 dias
+                const ultimosDias = [];
+                const contagemPorDia = {};
+                
+                for (let i = 6; i >= 0; i--) {
+                    const data = new Date();
+                    data.setDate(data.getDate() - i);
+                    const dataStr = data.toISOString().split('T')[0];
+                    ultimosDias.push(dataStr);
+                    contagemPorDia[dataStr] = 0;
+                }
+                
+                console.log('📅 Últimos dias:', ultimosDias);
+                
+                data.chamados.forEach(chamado => {
+                    const dataCriacao = chamado.data_criacao.split('T')[0];
+                    if (contagemPorDia.hasOwnProperty(dataCriacao)) {
+                        contagemPorDia[dataCriacao]++;
+                    }
+                });
+                
+                console.log('📊 Contagem por dia:', contagemPorDia);
+                
+                const ctx = document.getElementById('volumeChart');
+                
+                if (!ctx) {
+                    console.error('❌ Elemento volumeChart não encontrado!');
+                    return;
+                }
+                
+                if (volumeChart && typeof volumeChart.destroy === 'function') {
+                    console.log('🔄 Destruindo gráfico anterior');
+                    volumeChart.destroy();
+                }
+                
+                volumeChart = new Chart(ctx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ultimosDias.map(data => new Date(data).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' })),
+                        datasets: [{
+                            label: 'Chamados Criados',
+                            data: ultimosDias.map(data => contagemPorDia[data]),
+                            backgroundColor: '#3498db',
+                            borderColor: '#2980b9',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                console.log('✅ Gráfico de volume criado com sucesso:', volumeChart);
+                
+            } catch (error) {
+                console.error('❌ Erro ao criar gráfico de volume:', error);
+            }
+        }
+
+        async function criarGraficoTendencia() {
+            try {
+                console.log('🎯 Criando gráfico de tendência...');
+                const response = await fetch(`${API_BASE}/chamados?limit=100`);
+                const data = await response.json();
+                console.log('📊 Dados recebidos para tendência:', data);
+                
+                // Simular dados de tendência (tempo médio de resolução por semana)
+                const semanas = ['Sem -3', 'Sem -2', 'Sem -1', 'Atual'];
+                const temposMedias = [48, 52, 45, 38]; // Horas fictícias mostrando melhoria
+                
+                console.log('📊 Dados de tendência:', { semanas, temposMedias });
+                
+                const ctx = document.getElementById('tendenciaChart');
+                
+                if (!ctx) {
+                    console.error('❌ Elemento tendenciaChart não encontrado!');
+                    return;
+                }
+                
+                if (tendenciaChart && typeof tendenciaChart.destroy === 'function') {
+                    console.log('🔄 Destruindo gráfico anterior');
+                    tendenciaChart.destroy();
+                }
+                
+                tendenciaChart = new Chart(ctx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: semanas,
+                        datasets: [{
+                            label: 'Tempo Médio (horas)',
+                            data: temposMedias,
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Horas'
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                console.log('✅ Gráfico de tendência criado com sucesso:', tendenciaChart);
+                
+            } catch (error) {
+                console.error('❌ Erro ao criar gráfico de tendência:', error);
+            }
+        }
+
+        async function carregarListaClientes() {
+            try {
+                const response = await fetch(`${API_BASE}/chamados?limit=100`);
+                const data = await response.json();
+                
+                // Extrair lista única de clientes
+                const clientes = [...new Set(data.chamados.map(c => c.cliente_solicitante))].sort();
+                
+                const select = document.getElementById('filtroClienteDropdown');
+                select.innerHTML = '<option value="">Todos os clientes</option>';
+                
+                clientes.forEach(cliente => {
+                    const option = document.createElement('option');
+                    option.value = cliente;
+                    option.textContent = cliente;
+                    select.appendChild(option);
+                });
+                
+            } catch (error) {
+                console.error('Erro ao carregar lista de clientes:', error);
+            }
+        }
+
+        function limparFiltros() {
+            document.getElementById('filtroStatus').selectedIndex = -1;
+            document.getElementById('filtroCriticidade').selectedIndex = -1;
+            document.getElementById('filtroClienteDropdown').selectedIndex = 0;
+            document.getElementById('filtroDataInicio').value = '';
+            document.getElementById('filtroDataFim').value = '';
+            document.getElementById('filtroBusca').value = '';
+            
+            paginaAtual = 1;
+            carregarChamados();
+        }
+
+        function ordenarPor(campo) {
+            if (currentSort === campo) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort = campo;
+                sortDirection = 'asc';
+            }
+            carregarChamados();
+        }
+
+        async function abrirDetalhes(chamadoId) {
+            try {
+                // Buscar detalhes do chamado
+                const response = await fetch(`${API_BASE}/chamados/${chamadoId}`);
+                const chamado = await response.json();
+                
+                // Buscar follow-ups
+                const followupsResponse = await fetch(`${API_BASE}/chamados/${chamadoId}/followups`);
+                const followups = await followupsResponse.json();
+                
+                // Preencher modal
+                document.getElementById('modalTitulo').textContent = `Chamado ${chamado.numero_wex}`;
+                
+                const detailsContainer = document.getElementById('chamadoDetails');
+                detailsContainer.innerHTML = `
+                    <div class="detail-item">
+                        <div class="detail-label">Número WEX</div>
+                        <div class="detail-value">${chamado.numero_wex}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Cliente</div>
+                        <div class="detail-value">${chamado.cliente_solicitante}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Status</div>
+                        <div class="detail-value">
+                            <span class="status-badge status-${chamado.status.toLowerCase().replace(' ', '-')}">${chamado.status}</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Criticidade</div>
+                        <div class="detail-value">
+                            <span class="criticidade-badge criticidade-${chamado.criticidade.toLowerCase()}">${chamado.criticidade}</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Data de Criação</div>
+                        <div class="detail-value">${formatarData(chamado.data_criacao)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Score de Qualidade</div>
+                        <div class="detail-value">${chamado.score_qualidade}%</div>
+                    </div>
+                    <div class="detail-item" style="grid-column: 1/-1;">
+                        <div class="detail-label">Descrição</div>
+                        <div class="detail-value">${chamado.descricao}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Ambiente Informado</div>
+                        <div class="detail-value">${chamado.ambiente_informado ? '✅ Sim' : '❌ Não'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Possui Anexos</div>
+                        <div class="detail-value">${chamado.possui_anexos ? '📎 Sim' : '❌ Não'}</div>
+                    </div>
+                `;
+                
+                // Preencher timeline de follow-ups
+                const timelineContainer = document.getElementById('followupTimeline');
+                if (followups.length > 0) {
+                    timelineContainer.innerHTML = followups.map(followup => `
+                        <div class="followup-item">
+                            <div class="followup-header">
+                                <span class="followup-autor">${followup.autor}</span>
+                                <span class="followup-tipo">${followup.tipo}</span>
+                            </div>
+                            <div class="followup-data">${formatarData(followup.data_criacao)}</div>
+                            <div class="followup-descricao">${followup.descricao}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    timelineContainer.innerHTML = '<p style="text-align: center; color: #666;">Nenhum follow-up encontrado</p>';
+                }
+                
+                // Mostrar modal
+                document.getElementById('modalChamado').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Erro ao carregar detalhes do chamado:', error);
+                alert('Erro ao carregar detalhes do chamado');
+            }
+        }
+
+        function fecharModal() {
+            document.getElementById('modalChamado').style.display = 'none';
+        }
+        
+        // Funções para Anexos Simulados
+        function gerarAnexosSimulados() {
+            const tipos = [
+                { nome: 'Contrato.pdf', tipo: 'pdf', icone: '📄', tamanho: '2.4 MB' },
+                { nome: 'Nota_Fiscal.pdf', tipo: 'pdf', icone: '📄', tamanho: '1.2 MB' },
+                { nome: 'Foto_Produto.jpg', tipo: 'imagem', icone: '🖼️', tamanho: '856 KB' },
+                { nome: 'Planilha_Dados.xlsx', tipo: 'excel', icone: '📊', tamanho: '3.1 MB' },
+                { nome: 'Apresentacao.pptx', tipo: 'powerpoint', icone: '📑', tamanho: '5.7 MB' },
+                { nome: 'Documento.docx', tipo: 'word', icone: '📝', tamanho: '1.8 MB' }
+            ];
+            
+            return tipos.slice(0, Math.floor(Math.random() * 4) + 2);
+        }
+        
+        function renderizarAnexos(anexos) {
+            return anexos.map(anexo => `
+                <div class="anexo-item" onclick="visualizarAnexo('${anexo.nome}', '${anexo.tipo}')">
+                    <div class="anexo-icon">${anexo.icone}</div>
+                    <div class="anexo-nome">${anexo.nome}</div>
+                    <div class="anexo-tamanho">${anexo.tamanho}</div>
+                </div>
+            `).join('');
+        }
+        
+        function visualizarAnexo(nome, tipo) {
+            if (tipo === 'imagem') {
+                mostrarPreviewImagem(nome);
+            } else {
+                simularDownload(nome);
+            }
+        }
+        
+        function mostrarPreviewImagem(nome) {
+            const modalPreview = document.createElement('div');
+            modalPreview.className = 'image-preview-modal';
+            modalPreview.innerHTML = `
+                <div class="image-preview-content">
+                    <button class="image-preview-close" onclick="this.parentElement.parentElement.remove()">&times;</button>
+                    <img src="data:image/svg+xml;base64,${gerarImagemSimulada()}" alt="${nome}">
+                </div>
+            `;
+            
+            document.body.appendChild(modalPreview);
+            
+            modalPreview.addEventListener('click', function(e) {
+                if (e.target === modalPreview) {
+                    modalPreview.remove();
+                }
+            });
+        }
+        
+        function gerarImagemSimulada() {
+            const svg = `
+                <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100%" height="100%" fill="#e9ecef"/>
+                    <circle cx="200" cy="150" r="50" fill="#6c757d"/>
+                    <text x="200" y="220" text-anchor="middle" fill="#495057" font-family="Arial" font-size="16">Imagem Simulada</text>
+                </svg>
+            `;
+            return btoa(svg);
+        }
+        
+        function simularDownload(nome) {
+            mostrarToast(`Download iniciado: ${nome}`, 'info');
+            
+            setTimeout(() => {
+                mostrarToast(`Download concluído: ${nome}`, 'success');
+            }, 2000);
+        }
+        
+        // Variáveis de Paginação
+        let paginaAtual = 1;
+        let tamanhoPagina = 20;
+        let totalChamados = 0;
+        let totalPaginas = 0;
+        
+        // Funções de Paginação Avançada
+        function mudarTamanhoPagina() {
+            tamanhoPagina = parseInt(document.getElementById('pageSize').value);
+            paginaAtual = 1;
+            carregarChamados();
+        }
+        
+        function irParaPagina(pagina) {
+            paginaAtual = pagina;
+            carregarChamados();
+        }
+        
+        function paginaAnterior() {
+            if (paginaAtual > 1) {
+                paginaAtual--;
+                carregarChamados();
+            }
+        }
+        
+        function proximaPagina() {
+            if (paginaAtual < totalPaginas) {
+                paginaAtual++;
+                carregarChamados();
+            }
+        }
+        
+        function irParaUltimaPagina() {
+            paginaAtual = totalPaginas;
+            carregarChamados();
+        }
+        
+        function atualizarPaginacao(total, chamados) {
+            totalChamados = total;
+            totalPaginas = Math.ceil(total / tamanhoPagina);
+            
+            // Atualizar estatísticas
+            const inicio = (paginaAtual - 1) * tamanhoPagina + 1;
+            const fim = Math.min(paginaAtual * tamanhoPagina, total);
+            document.getElementById('paginationStats').textContent = 
+                `Mostrando ${inicio}-${fim} de ${total} resultados`;
+            
+            // Atualizar botões de navegação
+            document.getElementById('btnPrimeira').disabled = paginaAtual <= 1;
+            document.getElementById('btnAnterior').disabled = paginaAtual <= 1;
+            document.getElementById('btnProxima').disabled = paginaAtual >= totalPaginas;
+            document.getElementById('btnUltima').disabled = paginaAtual >= totalPaginas;
+            
+            // Gerar números de página
+            gerarNumerosPagina();
+        }
+        
+        function gerarNumerosPagina() {
+            const container = document.getElementById('paginasNumeros');
+            let html = '';
+            
+            const maxPaginas = 5;
+            let inicio = Math.max(1, paginaAtual - Math.floor(maxPaginas / 2));
+            let fim = Math.min(totalPaginas, inicio + maxPaginas - 1);
+            
+            if (fim - inicio < maxPaginas - 1) {
+                inicio = Math.max(1, fim - maxPaginas + 1);
+            }
+            
+            if (inicio > 1) {
+                html += `<button class="pagination-btn" onclick="irParaPagina(1)">1</button>`;
+                if (inicio > 2) {
+                    html += `<span>...</span>`;
+                }
+            }
+            
+            for (let i = inicio; i <= fim; i++) {
+                const ativo = i === paginaAtual ? 'active' : '';
+                html += `<button class="pagination-btn ${ativo}" onclick="irParaPagina(${i})">${i}</button>`;
+            }
+            
+            if (fim < totalPaginas) {
+                if (fim < totalPaginas - 1) {
+                    html += `<span>...</span>`;
+                }
+                html += `<button class="pagination-btn" onclick="irParaPagina(${totalPaginas})">${totalPaginas}</button>`;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // Fechar modal ao clicar fora dele
+        window.onclick = function(event) {
+            const modal = document.getElementById('modalChamado');
+            if (event.target === modal) {
+                fecharModal();
+            }
+        }
+
         async function carregarChamados() {
             try {
+                console.log('🔍 Iniciando carregamento de chamados...');
                 const params = new URLSearchParams();
-                params.append('skip', (currentPage - 1) * pageSize);
-                params.append('limit', pageSize);
+                params.append('skip', (paginaAtual - 1) * tamanhoPagina);
+                params.append('limit', tamanhoPagina);
                 
-                // Filtros
+                console.log('📄 Parâmetros de paginação:', { paginaAtual, tamanhoPagina });
+                
+                // Filtros básicos
                 const status = Array.from(document.getElementById('filtroStatus').selectedOptions).map(opt => opt.value);
                 const criticidade = Array.from(document.getElementById('filtroCriticidade').selectedOptions).map(opt => opt.value);
-                const cliente = document.getElementById('filtroCliente').value.trim();
+                const clienteDropdown = document.getElementById('filtroClienteDropdown').value;
                 const busca = document.getElementById('filtroBusca').value.trim();
+                
+                // Filtros de data
+                const dataInicio = document.getElementById('filtroDataInicio').value;
+                const dataFim = document.getElementById('filtroDataFim').value;
                 
                 status.forEach(s => params.append('status', s));
                 criticidade.forEach(c => params.append('criticidade', c));
-                if (cliente) params.append('cliente', cliente);
+                if (clienteDropdown) params.append('cliente', clienteDropdown);
                 if (busca) params.append('busca_texto', busca);
+                if (dataInicio) params.append('data_inicio', dataInicio);
+                if (dataFim) params.append('data_fim', dataFim);
                 
-                const response = await fetch(`${API_BASE}/chamados?${params}`);
+                const url = `${API_BASE}/chamados?${params}`;
+                console.log('🌐 URL da requisição:', url);
+                
+                const response = await fetch(url);
+                console.log('📡 Status da resposta:', response.status);
+                
                 const data = await response.json();
+                console.log('📊 Dados recebidos:', data);
                 
-                renderizarChamados(data.chamados);
-                renderizarPaginacao(data.page, data.pages, data.total);
+                // Aplicar ordenação no frontend se necessário
+                let chamados = data.chamados;
+                console.log('📋 Número de chamados recebidos:', chamados?.length || 0);
+                
+                if (currentSort) {
+                    chamados.sort((a, b) => {
+                        let valueA = a[currentSort];
+                        let valueB = b[currentSort];
+                        
+                        // Converter datas para comparação
+                        if (currentSort.includes('data_')) {
+                            valueA = new Date(valueA);
+                            valueB = new Date(valueB);
+                        }
+                        
+                        // Converter números
+                        if (currentSort === 'score_qualidade') {
+                            valueA = parseInt(valueA);
+                            valueB = parseInt(valueB);
+                        }
+                        
+                        if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+                        if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+                        return 0;
+                    });
+                }
+                
+                renderizarChamados(chamados);
+                atualizarPaginacao(data.total, chamados);
+                
+                // Verificar chamados críticos para notificações
+                verificarChamadosCriticos(chamados);
                 
             } catch (error) {
                 console.error('Erro ao carregar chamados:', error);
                 document.getElementById('chamadosTableBody').innerHTML = 
-                    '<tr><td colspan="7" class="error">Erro ao carregar chamados</td></tr>';
+                    '<tr><td colspan="8" class="error">Erro ao carregar chamados</td></tr>';
+                
+                mostrarToast('error', 'Erro', 'Falha ao carregar lista de chamados. Tente novamente.');
             }
         }
 
         function renderizarChamados(chamados) {
+            console.log('🎨 Renderizando chamados:', chamados);
             const tbody = document.getElementById('chamadosTableBody');
+            console.log('📋 Elemento tbody encontrado:', tbody);
             
-            if (!chamados || chamados.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="loading">Nenhum chamado encontrado</td></tr>';
+            if (!tbody) {
+                console.error('❌ Elemento chamadosTableBody não encontrado!');
                 return;
             }
             
-            tbody.innerHTML = chamados.map(chamado => `
-                <tr>
-                    <td><strong>${chamado.numero_wex}</strong></td>
-                    <td>${chamado.cliente_solicitante}</td>
-                    <td title="${chamado.descricao}">${truncarTexto(chamado.descricao, 50)}</td>
-                    <td><span class="status-badge status-${chamado.status.toLowerCase().replace(' ', '-')}">${chamado.status}</span></td>
-                    <td><span class="criticidade-badge criticidade-${chamado.criticidade.toLowerCase()}">${chamado.criticidade}</span></td>
-                    <td>${formatarData(chamado.data_criacao)}</td>
-                    <td>${chamado.score_qualidade}%</td>
-                </tr>
-            `).join('');
+            if (!chamados || chamados.length === 0) {
+                console.log('⚠️ Nenhum chamado para renderizar');
+                tbody.innerHTML = '<tr><td colspan="8" class="loading">Nenhum chamado encontrado</td></tr>';
+                return;
+            }
+            
+            console.log('✅ Renderizando', chamados.length, 'chamados');
+            
+            tbody.innerHTML = chamados.map(chamado => {
+                // Mapear criticidades corretamente
+                const criticidadeClass = {
+                    'Alta': 'criticidade-alta',
+                    'Média': 'criticidade-media', 
+                    'Baixa': 'criticidade-baixa',
+                    'Crítica': 'criticidade-critica'
+                }[chamado.criticidade] || '';
+                
+                // Mapear status corretamente
+                const statusClass = {
+                    'Aberto': 'status-aberto',
+                    'Em análise': 'status-em-analise',
+                    'Em Andamento': 'status-em-andamento', 
+                    'Pendente': 'status-pendente',
+                    'Resolvido': 'status-resolvido',
+                    'Fechado': 'status-fechado'
+                }[chamado.status] || '';
+                
+                const score = parseInt(chamado.score_qualidade);
+                const scoreClass = score >= 80 ? 'score-alto' : score >= 60 ? 'score-medio' : 'score-baixo';
+                
+                const dataAbertura = new Date(chamado.data_criacao).toLocaleString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                const dataUltimaAtualizacao = new Date(chamado.data_atualizacao || chamado.data_criacao).toLocaleString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                // Calcular badges dinâmicos
+                const badges = calcularBadgesChamado(chamado);
+                const badgesHtml = badges.map(badge => 
+                    `<span class="badge ${badge.class}">${badge.text}</span>`
+                ).join('');
+                
+                // Aplicar highlight na busca
+                const termoBusca = document.getElementById('filtroBusca').value;
+                const descricaoHighlight = aplicarHighlight(truncarTexto(chamado.descricao, 50), termoBusca);
+                const clienteHighlight = aplicarHighlight(chamado.cliente_solicitante, termoBusca);
+                
+                return `
+                    <tr onclick="abrirModalDetalhes(${chamado.id})" class="clickable-row">
+                        <td>
+                            <strong>${aplicarHighlight(chamado.numero_wex, termoBusca)}</strong>
+                            <div class="chamado-badges">${badgesHtml}</div>
+                        </td>
+                        <td class="status-cell">
+                            <span class="status-badge ${statusClass}">${chamado.status}</span>
+                        </td>
+                        <td class="titulo-cell" title="${chamado.descricao}">${descricaoHighlight}</td>
+                        <td>${clienteHighlight}</td>
+                        <td class="criticidade-cell">
+                            <span class="criticidade-badge ${criticidadeClass}">${chamado.criticidade}</span>
+                        </td>
+                        <td class="score-cell">
+                            <span class="score-badge ${scoreClass}">${score}%</span>
+                        </td>
+                        <td class="data-cell">${dataAbertura}</td>
+                        <td class="data-cell">${dataUltimaAtualizacao}</td>
+                    </tr>
+                `;
+            }).join('');
+            
+            // Atualizar ícones de ordenação
+            document.querySelectorAll('.sortable').forEach(th => {
+                const icon = th.querySelector('.sort-icon');
+                const field = th.dataset.sort;
+                
+                if (field === currentSort) {
+                    icon.textContent = sortDirection === 'asc' ? '↑' : '↓';
+                    icon.classList.add('active');
+                } else {
+                    icon.textContent = '↕';
+                    icon.classList.remove('active');
+                }
+            });
         }
 
         function renderizarPaginacao(currentPage, totalPages, totalItems) {
@@ -426,7 +3061,222 @@
         }
 
         function irParaPagina(page) {
-            currentPage = page;
+            paginaAtual = page;
+            carregarChamados();
+        }
+
+        // Sistema de Notificações
+        let notificationCount = 0;
+        let criticalTickets = [];
+        
+        // Calcular badges para chamados
+        function calcularBadgesChamado(chamado) {
+            const badges = [];
+            const agora = new Date();
+            const dataAbertura = new Date(chamado.data_criacao);
+            const horasDecorridas = (agora - dataAbertura) / (1000 * 60 * 60);
+            
+            // Badge de chamado novo (menos de 2 horas)
+            if (horasDecorridas < 2) {
+                badges.push({ class: 'badge-novo', text: 'NOVO' });
+            }
+            
+            // Badges baseados em criticidade e tempo
+            if (chamado.criticidade === 'Alta') {
+                if (horasDecorridas > 24 && chamado.status !== 'Fechado') {
+                    badges.push({ class: 'badge-critico-vencido', text: 'VENCIDO' });
+                } else if (horasDecorridas > 18 && chamado.status !== 'Fechado') {
+                    badges.push({ class: 'badge-critico-proximo', text: 'ATENÇÃO' });
+                }
+            }
+            
+            // Badge de SLA OK
+            if (chamado.status === 'Resolvido' || chamado.status === 'Fechado') {
+                badges.push({ class: 'badge-sla-ok', text: 'OK' });
+            }
+            
+            return badges;
+        }
+        
+        // Mostrar toast notification
+        function mostrarToast(tipo, titulo, mensagem, duracao = 5000) {
+            const container = document.getElementById('toastContainer');
+            const toastId = 'toast-' + Date.now();
+            
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${tipo}`;
+            toast.id = toastId;
+            
+            toast.innerHTML = `
+                <div class="toast-header">
+                    <span class="toast-title">${titulo}</span>
+                    <button class="toast-close" onclick="fecharToast('${toastId}')">&times;</button>
+                </div>
+                <div class="toast-body">${mensagem}</div>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Animação de entrada
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            // Auto-remover após duracao
+            setTimeout(() => fecharToast(toastId), duracao);
+            
+            // Som opcional para alertas críticos
+            if (tipo === 'error' && 'speechSynthesis' in window) {
+                // Pequeno beep usando Web Speech API (opcional)
+                const utterance = new SpeechSynthesisUtterance('');
+                utterance.volume = 0.1;
+                utterance.rate = 10;
+                speechSynthesis.speak(utterance);
+            }
+        }
+        
+        // Fechar toast
+        function fecharToast(toastId) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }
+        }
+        
+        // Mostrar banner de alerta
+        function mostrarAlertBanner(tipo, mensagem) {
+            const banner = document.getElementById('alertBanner');
+            banner.className = `alert-banner ${tipo}`;
+            banner.textContent = mensagem;
+            banner.style.display = 'block';
+            
+            // Auto-ocultar após 10 segundos
+            setTimeout(() => {
+                banner.style.display = 'none';
+            }, 10000);
+        }
+        
+        // Atualizar contador de notificações
+        function atualizarContadorNotificacoes() {
+            const badge = document.getElementById('notificationBadge');
+            
+            if (notificationCount > 0) {
+                badge.textContent = notificationCount > 99 ? '99+' : notificationCount;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+        
+        // Toggle painel de notificações (placeholder para implementação futura)
+        function toggleNotificationPanel() {
+            mostrarToast('info', 'Notificações', `Você tem ${notificationCount} notificações pendentes`);
+        }
+        
+        // Verificar chamados críticos
+        function verificarChamadosCriticos(chamados) {
+            const agora = new Date();
+            let criticosVencidos = 0;
+            let criticosProximos = 0;
+            
+            chamados.forEach(chamado => {
+                const dataAbertura = new Date(chamado.data_criacao);
+                const horasDecorridas = (agora - dataAbertura) / (1000 * 60 * 60);
+                
+                if (chamado.criticidade === 'Alta' && chamado.status !== 'Fechado') {
+                    if (horasDecorridas > 24) {
+                        criticosVencidos++;
+                    } else if (horasDecorridas > 18) {
+                        criticosProximos++;
+                    }
+                }
+            });
+            
+            // Atualizar contador
+            notificationCount = criticosVencidos + criticosProximos;
+            atualizarContadorNotificacoes();
+            
+            // Mostrar alertas se necessário
+            if (criticosVencidos > 0) {
+                mostrarAlertBanner('error', 
+                    `⚠️ ${criticosVencidos} chamado(s) crítico(s) vencido(s)! Ação imediata necessária.`);
+            } else if (criticosProximos > 0) {
+                mostrarAlertBanner('warning', 
+                    `⏰ ${criticosProximos} chamado(s) crítico(s) próximo(s) do vencimento.`);
+            }
+        }
+        
+        // Estados de loading
+        function mostrarLoading(elemento, texto = 'Carregando...') {
+            elemento.innerHTML = `
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    ${texto}
+                </div>
+            `;
+        }
+        
+        function ocultarLoading(elemento) {
+            const loading = elemento.querySelector('.loading-state');
+            if (loading) {
+                loading.remove();
+            }
+        }
+        
+        // Função de ordenação
+        function ordenarTabela(campo) {
+            if (currentSort === campo) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort = campo;
+                sortDirection = 'asc';
+            }
+            
+            carregarChamados();
+        }
+        
+        // Função para carregar clientes no dropdown
+        async function carregarClientesDropdown() {
+            try {
+                const response = await fetch(`${API_BASE}/chamados?limit=100`);
+                const data = await response.json();
+                
+                // Extrair lista única de clientes dos chamados
+                const clientesUnicos = [...new Set(data.chamados.map(chamado => chamado.cliente_solicitante))].sort();
+                
+                const dropdown = document.getElementById('filtroClienteDropdown');
+                dropdown.innerHTML = '<option value="">Todos os clientes</option>';
+                
+                clientesUnicos.forEach(cliente => {
+                    const option = document.createElement('option');
+                    option.value = cliente;
+                    option.textContent = cliente;
+                    dropdown.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar clientes:', error);
+            }
+        }
+        
+        // Função para limpar filtros
+        function limparFiltros() {
+            document.getElementById('filtroStatus').selectedIndex = -1;
+            document.getElementById('filtroCriticidade').selectedIndex = -1;
+            document.getElementById('filtroClienteDropdown').value = '';
+            document.getElementById('filtroBusca').value = '';
+            document.getElementById('filtroDataInicio').value = '';
+            document.getElementById('filtroDataFim').value = '';
+            
+            // Reiniciar ordenação
+            currentSort = null;
+            sortDirection = 'asc';
+            
+            carregarChamados();
+            
+            mostrarToast('success', 'Filtros Limpos', 'Todos os filtros foram removidos com sucesso.');
+        }
+        
+        // Função de busca avançada
+        function aplicarBuscaAvancada() {
             carregarChamados();
         }
 
@@ -442,6 +3292,7 @@
         // Auto-refresh a cada 30 segundos
         setInterval(() => {
             carregarDashboard();
+            carregarDashboardAvancado();
             carregarChamados();
         }, 30000);
     </script>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WEX Intelligence - Teste Debug</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+</head>
+<body>
+    <h1>Teste de Sintaxe JavaScript</h1>
+    <div id="resultado"></div>
+    
+    <script>
+        console.log('✅ Teste de sintaxe iniciado');
+        
+        // Teste 1: Try-catch básico
+        try {
+            console.log('✅ Try-catch 1 funcionando');
+        } catch (error) {
+            console.error('❌ Erro no try-catch 1:', error);
+        }
+        
+        // Teste 2: Try-catch com async
+        async function testeAsync() {
+            try {
+                console.log('✅ Try-catch async funcionando');
+            } catch (error) {
+                console.error('❌ Erro no try-catch async:', error);
+            }
+        }
+        
+        testeAsync();
+        
+        // Teste 3: Chart.js
+        if (typeof Chart !== 'undefined') {
+            console.log('✅ Chart.js carregado corretamente');
+        } else {
+            console.error('❌ Chart.js não encontrado');
+        }
+        
+        document.getElementById('resultado').innerHTML = 'Teste concluído - veja o console!';
+    </script>
+</body>
+</html>

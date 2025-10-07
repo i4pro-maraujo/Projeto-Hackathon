@@ -1,0 +1,15 @@
+{
+  "timestamp": "2025-10-07T10:58:08.526058",
+  "status": "APROVADO",
+  "sucessos": 6,
+  "total": 6,
+  "percentual": 100.0,
+  "detalhes": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+  ]
+}

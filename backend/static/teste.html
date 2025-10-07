@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste WEX Intelligence</title>
+</head>
+<body>
+    <h1>Teste de Conectividade</h1>
+    <div id="resultado"></div>
+    
+    <script>
+        console.log('Iniciando teste...');
+        
+        async function testar() {
+            try {
+                console.log('Tentando conectar à API...');
+                const response = await fetch('http://localhost:8000/chamados');
+                console.log('Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Data:', data);
+                
+                document.getElementById('resultado').innerHTML = `
+                    <h2>Sucesso!</h2>
+                    <p>Total de chamados: ${data.total}</p>
+                    <p>Chamados retornados: ${data.chamados.length}</p>
+                    <h3>Primeiro chamado:</h3>
+                    <pre>${JSON.stringify(data.chamados[0], null, 2)}</pre>
+                `;
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('resultado').innerHTML = `
+                    <h2>Erro!</h2>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+        
+        testar();
+    </script>
+</body>
+</html>

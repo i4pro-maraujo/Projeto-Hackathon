@@ -381,6 +381,60 @@
             border-radius: 5px;
             font-size: 0.9rem;
         }
+        
+        /* Melhorias para selects múltiplos */
+        .filter-group select[multiple] {
+            min-height: 80px;
+            max-height: 120px;
+            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 8px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .filter-group select[multiple]:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
+            outline: none;
+        }
+        
+        .filter-group select[multiple] option {
+            padding: 6px 10px;
+            margin: 2px 0;
+            border-radius: 4px;
+            background-color: white;
+            transition: all 0.2s ease;
+        }
+        
+        .filter-group select[multiple] option:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .filter-group select[multiple] option:checked {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            font-weight: 500;
+        }
+        
+        /* Indicador visual para seleção múltipla */
+        .filter-group label {
+            position: relative;
+        }
+        
+        .filter-group:has(select[multiple]) label::after {
+            content: "📋 Multi-seleção";
+            font-size: 0.7rem;
+            color: #6c757d;
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
 
         .btn {
             padding: 0.5rem 1rem;
@@ -662,12 +716,18 @@
         
         /* Alertas Visuais */
         .alert-banner {
+            position: fixed;
+            top: 80px; /* Abaixo do header */
+            left: 0;
+            right: 0;
+            z-index: 1000;
             background: linear-gradient(135deg, #dc3545, #fd7e14);
             color: white;
             padding: 12px 20px;
             text-align: center;
             font-weight: 600;
             animation: slideDown 0.5s ease-out;
+            margin-bottom: 10px;
         }
         
         .alert-banner.warning {
@@ -677,6 +737,19 @@
         
         .alert-banner.info {
             background: linear-gradient(135deg, #17a2b8, #007bff);
+        }
+        
+        .alert-banner.success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+        
+        /* Ajuste para evitar sobreposição */
+        .container {
+            margin-top: 20px;
+        }
+        
+        .container.with-alert {
+            margin-top: 80px;
         }
         
         @keyframes slideDown {
@@ -1353,6 +1426,333 @@
             font-weight: 600;
         }
         
+        /* ===== ESTILOS SEÇÃO IA ===== */
+        .ia-nav {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 1rem;
+        }
+        
+        .ia-nav-btn {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid #667eea;
+            background: transparent;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .ia-nav-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .ia-nav-btn.active {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .ia-module {
+            margin-bottom: 2rem;
+        }
+        
+        .ia-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border: 1px solid #e9ecef;
+        }
+        
+        .ia-card h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .ia-card p {
+            color: #6c757d;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .ia-input-group {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .ia-input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .ia-input-group select,
+        .ia-input-group input {
+            width: 100%;
+            max-width: 300px;
+            padding: 0.75rem;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            margin-right: 1rem;
+        }
+        
+        .ia-input-group .btn {
+            margin-top: 1rem;
+        }
+        
+        .parametros-busca {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .ia-resultado {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 2rem;
+            border-left: 4px solid #667eea;
+        }
+        
+        .ia-resultado h4 {
+            color: #667eea;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .ia-resultado h5 {
+            color: #495057;
+            margin: 1.5rem 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .resultado-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .resultado-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .resultado-item label {
+            display: block;
+            font-weight: 600;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .resultado-item span {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .fatores-identificados,
+        .sugestoes-melhoria,
+        .tags-sugeridas,
+        .contexto-chamado,
+        .sugestoes-principais,
+        .historico-exemplos,
+        .padroes-identificados,
+        .padroes-globais,
+        .clientes-ranking {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            border: 1px solid #dee2e6;
+        }
+        
+        .fator-item,
+        .sugestao-item,
+        .tag-item,
+        .contexto-item,
+        .padrao-item {
+            background: #e3f2fd;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid #2196f3;
+        }
+        
+        .sugestao-item {
+            background: #f3e5f5;
+            border-left-color: #9c27b0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .sugestao-item:hover {
+            background: #e1bee7;
+            transform: translateX(5px);
+        }
+        
+        .relacionado-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.2s ease;
+        }
+        
+        .relacionado-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .relacionado-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .relacionado-score {
+            background: #28a745;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .relacionado-motivos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .motivo-tag {
+            background: #17a2b8;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+        
+        .acoes-triagem,
+        .acoes-sugestoes {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .metricas-ia {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .metric-card-ia {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .metric-value-ia {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-label-ia {
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .chamado-principal {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .badge-ia {
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .badge-ia.critica { background: #dc3545; }
+        .badge-ia.alta { background: #fd7e14; }
+        .badge-ia.media { background: #ffc107; color: #212529; }
+        .badge-ia.baixa { background: #28a745; }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Responsividade IA */
+        @media (max-width: 768px) {
+            .ia-nav {
+                flex-direction: column;
+            }
+            
+            .ia-nav-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .resultado-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metricas-ia {
+                grid-template-columns: 1fr;
+            }
+            
+            .parametros-busca {
+                grid-template-columns: 1fr;
+            }
+            
+            .acoes-triagem,
+            .acoes-sugestoes {
+                flex-direction: column;
+            }
+        }
+        
         /* Reduced Motion */
         @media (prefers-reduced-motion: reduce) {
             *,
@@ -1507,13 +1907,13 @@
                     <thead>
                         <tr>
                             <th onclick="ordenarPor('numero_wex')" style="cursor: pointer;">Nº WEX ⇅</th>
-                            <th onclick="ordenarPor('cliente_solicitante')" style="cursor: pointer;">Cliente ⇅</th>
-                            <th onclick="ordenarPor('descricao')" style="cursor: pointer;">Descrição ⇅</th>
                             <th onclick="ordenarPor('status')" style="cursor: pointer;">Status ⇅</th>
+                            <th onclick="ordenarPor('descricao')" style="cursor: pointer;">Descrição ⇅</th>
+                            <th onclick="ordenarPor('cliente_solicitante')" style="cursor: pointer;">Cliente ⇅</th>
                             <th onclick="ordenarPor('criticidade')" style="cursor: pointer;">Criticidade ⇅</th>
-                            <th onclick="ordenarPor('data_criacao')" style="cursor: pointer;">Criado em ⇅</th>
                             <th onclick="ordenarPor('score_qualidade')" style="cursor: pointer;">Score ⇅</th>
-                            <th>Ações</th>
+                            <th onclick="ordenarPor('data_criacao')" style="cursor: pointer;">Criado em ⇅</th>
+                            <th>Última Atualização</th>
                         </tr>
                     </thead>
                     <tbody id="chamadosTableBody">
@@ -1549,24 +1949,235 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Modal de Detalhes do Chamado -->
-    <div id="modalChamado" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title" id="modalTitulo">Detalhes do Chamado</h2>
-                <span class="close" onclick="fecharModal()">&times;</span>
-            </div>
+        <!-- Seção de IA Intelligence -->
+        <div class="content-section" id="iaSection">
+            <h2 class="section-title">🤖 IA Intelligence - Sistema Inteligente</h2>
             
-            <div class="chamado-details" id="chamadoDetails">
-                <!-- Conteúdo será preenchido dinamicamente -->
+            <!-- Navegação entre módulos de IA -->
+            <div class="ia-nav">
+                <button class="ia-nav-btn active" onclick="mostrarModuloIA('triagem')">
+                    🎯 Triagem Automática
+                </button>
+                <button class="ia-nav-btn" onclick="mostrarModuloIA('sugestoes')">
+                    💡 Sugestões de Follow-up
+                </button>
+                <button class="ia-nav-btn" onclick="mostrarModuloIA('relacionados')">
+                    🔗 Chamados Relacionados
+                </button>
+                <button class="ia-nav-btn" onclick="mostrarModuloIA('relatorios')">
+                    📊 Relatórios de IA
+                </button>
             </div>
-            
-            <div class="followups-section">
-                <h3>📝 Follow-ups</h3>
-                <div class="followup-timeline" id="followupTimeline">
-                    <!-- Timeline será preenchida dinamicamente -->
+
+            <!-- Módulo de Triagem Automática -->
+            <div id="moduloTriagem" class="ia-module">
+                <div class="ia-card">
+                    <h3>🎯 Sistema de Triagem Automática</h3>
+                    <p>Analise chamados automaticamente para sugerir criticidade e melhorias.</p>
+                    
+                    <div class="ia-input-group">
+                        <label>Selecionar Chamado para Triagem:</label>
+                        <select id="selectChamadoTriagem">
+                            <option value="">Carregando chamados...</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="executarTriagem()">
+                            🔍 Executar Triagem
+                        </button>
+                    </div>
+                    
+                    <div id="resultadoTriagem" class="ia-resultado hidden">
+                        <h4>📋 Resultado da Análise</h4>
+                        <div class="resultado-grid">
+                            <div class="resultado-item">
+                                <label>Criticidade Atual:</label>
+                                <span id="criticidadeAtual" class="badge"></span>
+                            </div>
+                            <div class="resultado-item">
+                                <label>Criticidade Sugerida:</label>
+                                <span id="criticidadeSugerida" class="badge"></span>
+                            </div>
+                            <div class="resultado-item">
+                                <label>Confiança:</label>
+                                <span id="confiancaTriagem"></span>
+                            </div>
+                            <div class="resultado-item">
+                                <label>Score Qualidade:</label>
+                                <span id="scoreQualidade"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="fatores-identificados">
+                            <h5>🔍 Fatores Identificados:</h5>
+                            <div id="fatoresLista"></div>
+                        </div>
+                        
+                        <div class="sugestoes-melhoria">
+                            <h5>💡 Sugestões de Melhoria:</h5>
+                            <div id="sugestoesLista"></div>
+                        </div>
+                        
+                        <div class="tags-sugeridas">
+                            <h5>🏷️ Tags Sugeridas:</h5>
+                            <div id="tagsLista"></div>
+                        </div>
+                        
+                        <div class="acoes-triagem">
+                            <button class="btn btn-success" onclick="aplicarTriagem()">
+                                ✅ Aplicar Sugestões
+                            </button>
+                            <button class="btn btn-secondary" onclick="limparTriagem()">
+                                🗑️ Limpar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Módulo de Sugestões de Follow-up -->
+            <div id="moduloSugestoes" class="ia-module hidden">
+                <div class="ia-card">
+                    <h3>💡 Sugestões Inteligentes de Follow-up</h3>
+                    <p>Receba sugestões contextuais para próximas ações baseadas no histórico.</p>
+                    
+                    <div class="ia-input-group">
+                        <label>Selecionar Chamado:</label>
+                        <select id="selectChamadoSugestao">
+                            <option value="">Carregando chamados...</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="obterSugestoes()">
+                            💡 Obter Sugestões
+                        </button>
+                    </div>
+                    
+                    <div id="resultadoSugestoes" class="ia-resultado hidden">
+                        <h4>📝 Sugestões Personalizadas</h4>
+                        
+                        <div class="contexto-chamado">
+                            <h5>📊 Contexto do Chamado:</h5>
+                            <div id="contextoChamado"></div>
+                        </div>
+                        
+                        <div class="sugestoes-principais">
+                            <h5>⭐ Sugestões Principais:</h5>
+                            <div id="sugestoesPrincipais"></div>
+                        </div>
+                        
+                        <div class="historico-exemplos">
+                            <h5>📚 Exemplos do Histórico:</h5>
+                            <div id="exemplosSimilares"></div>
+                        </div>
+                        
+                        <div class="acoes-sugestoes">
+                            <button class="btn btn-success" onclick="criarFollowupSugerido()">
+                                ➕ Criar Follow-up
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Módulo de Chamados Relacionados -->
+            <div id="moduloRelacionados" class="ia-module hidden">
+                <div class="ia-card">
+                    <h3>🔗 Análise de Chamados Relacionados</h3>
+                    <p>Encontre chamados similares e identifique padrões para resolução mais eficiente.</p>
+                    
+                    <div class="ia-input-group">
+                        <label>Selecionar Chamado:</label>
+                        <select id="selectChamadoRelacionado">
+                            <option value="">Carregando chamados...</option>
+                        </select>
+                        <div class="parametros-busca">
+                            <label>Score Mínimo de Similaridade:</label>
+                            <input type="range" id="scoreMinimo" min="0.1" max="1" step="0.1" value="0.3">
+                            <span id="scoreValor">0.3</span>
+                            
+                            <label>Limite de Resultados:</label>
+                            <select id="limiteResultados">
+                                <option value="5">5</option>
+                                <option value="10" selected>10</option>
+                                <option value="20">20</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="buscarRelacionados()">
+                            🔍 Buscar Relacionados
+                        </button>
+                    </div>
+                    
+                    <div id="resultadoRelacionados" class="ia-resultado hidden">
+                        <h4>🔗 Chamados Similares Encontrados</h4>
+                        
+                        <div class="chamado-principal">
+                            <h5>📌 Chamado Principal:</h5>
+                            <div id="chamadoPrincipalInfo"></div>
+                        </div>
+                        
+                        <div class="lista-relacionados">
+                            <h5>📋 Chamados Relacionados:</h5>
+                            <div id="listaRelacionados"></div>
+                        </div>
+                        
+                        <div class="padroes-identificados">
+                            <h5>🔍 Padrões Identificados:</h5>
+                            <div id="padroesLista"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Módulo de Relatórios de IA -->
+            <div id="moduloRelatorios" class="ia-module hidden">
+                <div class="ia-card">
+                    <h3>📊 Relatórios e Analytics de IA</h3>
+                    <p>Visualize métricas e padrões identificados pelo sistema inteligente.</p>
+                    
+                    <div class="ia-input-group">
+                        <label>Período de Análise:</label>
+                        <select id="periodoAnalise">
+                            <option value="7">Últimos 7 dias</option>
+                            <option value="30" selected>Últimos 30 dias</option>
+                            <option value="90">Últimos 90 dias</option>
+                            <option value="365">Último ano</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="gerarRelatorioIA()">
+                            📈 Gerar Relatório
+                        </button>
+                    </div>
+                    
+                    <div id="resultadoRelatorio" class="ia-resultado hidden">
+                        <h4>📈 Analytics Inteligente</h4>
+                        
+                        <div class="metricas-ia">
+                            <div class="metric-card-ia">
+                                <div class="metric-value-ia" id="totalChamadosPeriodo">-</div>
+                                <div class="metric-label-ia">Total de Chamados</div>
+                            </div>
+                            <div class="metric-card-ia">
+                                <div class="metric-value-ia" id="totalGruposSimilares">-</div>
+                                <div class="metric-label-ia">Grupos Similares</div>
+                            </div>
+                            <div class="metric-card-ia">
+                                <div class="metric-value-ia" id="clientesAtivos">-</div>
+                                <div class="metric-label-ia">Clientes Ativos</div>
+                            </div>
+                        </div>
+                        
+                        <div class="padroes-globais">
+                            <h5>🌐 Padrões Globais Identificados:</h5>
+                            <div id="padroesGlobais"></div>
+                        </div>
+                        
+                        <div class="distribuicao-criticidade">
+                            <h5>📊 Distribuição por Criticidade:</h5>
+                            <div id="graficoCriticidade"></div>
+                        </div>
+                        
+                        <div class="clientes-ranking">
+                            <h5>👥 Ranking de Clientes:</h5>
+                            <div id="rankingClientes"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1830,16 +2441,31 @@
         // Função para abrir modal de detalhes aprimorado
         async function abrirModalDetalhes(id) {
             try {
+                console.log('🔍 Carregando detalhes do chamado ID:', id);
+                
                 const response = await fetch(`${API_BASE}/chamados/${id}`);
+                console.log('📥 Resposta da API:', response.status, response.statusText);
+                
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
+                }
+                
                 const chamado = await response.json();
+                console.log('📋 Dados do chamado:', chamado);
                 
                 const followupsResponse = await fetch(`${API_BASE}/chamados/${id}/followups`);
-                const followups = await followupsResponse.json();
+                console.log('📥 Resposta follow-ups:', followupsResponse.status);
                 
-                const score = parseInt(chamado.score_qualidade);
-                const scoreClass = score >= 8 ? 'score-alto' : score >= 6 ? 'score-medio' : 'score-baixo';
+                const followups = followupsResponse.ok ? await followupsResponse.json() : [];
+                console.log('📝 Follow-ups:', followups);
+                
+                const score = parseInt(chamado.score_qualidade) || 0;
+                const scoreClass = score >= 80 ? 'score-alto' : score >= 60 ? 'score-medio' : 'score-baixo';
                 
                 const modal = document.getElementById('chamadoModal');
+                if (!modal) {
+                    throw new Error('Modal não encontrado no DOM');
+                }
                 modal.innerHTML = `
                     <div class="modal-content modal-content-enhanced">
                         <div class="modal-header-enhanced">
@@ -1936,19 +2562,76 @@
                 
                 modal.style.display = 'flex';
                 modal.classList.add('show');
+                console.log('✅ Modal de detalhes carregado com sucesso');
                 
             } catch (error) {
-                console.error('Erro ao carregar detalhes:', error);
-                mostrarToast('error', 'Erro', 'Não foi possível carregar os detalhes do chamado.');
+                console.error('❌ Erro ao carregar detalhes:', error);
+                
+                // Mostrar erro mais específico
+                let mensagemErro = 'Não foi possível carregar os detalhes do chamado.';
+                if (error.message.includes('404')) {
+                    mensagemErro = 'Chamado não encontrado.';
+                } else if (error.message.includes('500')) {
+                    mensagemErro = 'Erro interno do servidor.';
+                } else if (error.message.includes('Erro HTTP')) {
+                    mensagemErro = error.message;
+                }
+                
+                mostrarToast('error', 'Erro', mensagemErro);
+                
+                // Tentar mostrar modal com informações básicas se disponível
+                const modal = document.getElementById('chamadoModal');
+                if (modal) {
+                    modal.innerHTML = `
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2>Erro ao Carregar Detalhes</h2>
+                                <button class="close" onclick="fecharModal()">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <p>❌ ${mensagemErro}</p>
+                                <p>ID do chamado: ${id}</p>
+                                <p>Tente novamente ou verifique se o chamado existe.</p>
+                            </div>
+                            <div class="modal-actions">
+                                <button class="btn-action btn-secondary-action" onclick="fecharModal()">Fechar</button>
+                            </div>
+                        </div>
+                    `;
+                    modal.style.display = 'flex';
+                }
             }
         }
         
         // Função para fechar modal
         function fecharModal() {
             const modal = document.getElementById('chamadoModal');
-            modal.style.display = 'none';
-            modal.classList.remove('show');
+            if (modal) {
+                modal.style.display = 'none';
+                modal.classList.remove('show');
+                console.log('✅ Modal fechado com sucesso');
+            } else {
+                console.error('❌ Modal não encontrado para fechar');
+            }
         }
+        
+        // Fechar modal com ESC ou clique fora
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('chamadoModal');
+                if (modal && modal.style.display === 'flex') {
+                    fecharModal();
+                }
+            }
+        });
+        
+        // Fechar modal clicando no overlay (fundo)
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('chamadoModal');
+            if (event.target === modal) {
+                fecharModal();
+            }
+        });
         
         // Funções auxiliares para ações do modal
         function editarChamado(id) {
@@ -1961,6 +2644,30 @@
 
         // Variáveis globais para os gráficos
         let statusChart, criticidadeChart, volumeChart, tendenciaChart;
+
+        // Função auxiliar para destruir charts de forma segura
+        function destruirChartSeguro(chart, nomeChart) {
+            if (chart) {
+                try {
+                    chart.destroy();
+                    console.log(`🗑️ Chart ${nomeChart} destruído com sucesso`);
+                } catch (error) {
+                    console.warn(`⚠️ Erro ao destruir chart ${nomeChart}:`, error);
+                }
+            }
+        }
+
+        // Função para destruir todos os charts
+        function destruirTodosCharts() {
+            destruirChartSeguro(statusChart, 'status');
+            destruirChartSeguro(criticidadeChart, 'criticidade');
+            destruirChartSeguro(volumeChart, 'volume');
+            destruirChartSeguro(tendenciaChart, 'tendencia');
+            statusChart = null;
+            criticidadeChart = null;
+            volumeChart = null;
+            tendenciaChart = null;
+        }
 
         // Função simplificada para inicializar todos os gráficos
         async function inicializarTodosGraficos() {
@@ -2190,9 +2897,17 @@
         async function carregarDashboardAvancado() {
             try {
                 console.log('Carregando dashboard avançado...');
+                
+                // Destruir charts existentes antes de criar novos
+                destruirTodosCharts();
+                console.log('🗑️ Charts anteriores destruídos');
+                
                 const response = await fetch(`${API_BASE}/dashboard/metricas`);
                 const data = await response.json();
                 console.log('Dados do dashboard avançado:', data);
+                
+                // Carregar notificações reais
+                await carregarNotificacoesReais();
                 
                 // Atualizar indicadores de SLA
                 await carregarIndicadoresSLA();
@@ -2289,10 +3004,9 @@
             
             console.log('✅ Canvas statusChart encontrado:', ctx);
             
-            if (statusChart && typeof statusChart.destroy === 'function') {
-                console.log('🔄 Destruindo gráfico anterior');
-                statusChart.destroy();
-            }
+            // Destruir chart anterior de forma segura
+            destruirChartSeguro(statusChart, 'status');
+            statusChart = null;
             
             const labels = Object.keys(dados);
             const values = Object.values(dados);
@@ -2351,10 +3065,9 @@
             
             console.log('✅ Canvas criticidadeChart encontrado:', ctx);
             
-            if (criticidadeChart && typeof criticidadeChart.destroy === 'function') {
-                console.log('🔄 Destruindo gráfico anterior');
-                criticidadeChart.destroy();
-            }
+            // Destruir chart anterior de forma segura
+            destruirChartSeguro(criticidadeChart, 'criticidade');
+            criticidadeChart = null;
             
             const labels = Object.keys(dados);
             const values = Object.values(dados);
@@ -2439,10 +3152,9 @@
                     return;
                 }
                 
-                if (volumeChart && typeof volumeChart.destroy === 'function') {
-                    console.log('🔄 Destruindo gráfico anterior');
-                    volumeChart.destroy();
-                }
+                // Destruir chart anterior de forma segura
+                destruirChartSeguro(volumeChart, 'volume');
+                volumeChart = null;
                 
                 volumeChart = new Chart(ctx.getContext('2d'), {
                     type: 'bar',
@@ -2502,10 +3214,9 @@
                     return;
                 }
                 
-                if (tendenciaChart && typeof tendenciaChart.destroy === 'function') {
-                    console.log('🔄 Destruindo gráfico anterior');
-                    tendenciaChart.destroy();
-                }
+                // Destruir chart anterior de forma segura
+                destruirChartSeguro(tendenciaChart, 'tendencia');
+                tendenciaChart = null;
                 
                 tendenciaChart = new Chart(ctx.getContext('2d'), {
                     type: 'line',
@@ -2668,16 +3379,12 @@
                 }
                 
                 // Mostrar modal
-                document.getElementById('modalChamado').style.display = 'block';
+                document.getElementById('chamadoModal').style.display = 'flex';
                 
             } catch (error) {
                 console.error('Erro ao carregar detalhes do chamado:', error);
                 alert('Erro ao carregar detalhes do chamado');
             }
-        }
-
-        function fecharModal() {
-            document.getElementById('modalChamado').style.display = 'none';
         }
         
         // Funções para Anexos Simulados
@@ -2843,7 +3550,7 @@
 
         // Fechar modal ao clicar fora dele
         window.onclick = function(event) {
-            const modal = document.getElementById('modalChamado');
+            const modal = document.getElementById('chamadoModal');
             if (event.target === modal) {
                 fecharModal();
             }
@@ -3145,14 +3852,101 @@
         // Mostrar banner de alerta
         function mostrarAlertBanner(tipo, mensagem) {
             const banner = document.getElementById('alertBanner');
+            const container = document.querySelector('.container');
+            
             banner.className = `alert-banner ${tipo}`;
             banner.textContent = mensagem;
             banner.style.display = 'block';
             
-            // Auto-ocultar após 10 segundos
+            // Adicionar classe para ajustar margem do container
+            if (container) {
+                container.classList.add('with-alert');
+            }
+            
+            // Auto-ocultar após 15 segundos
             setTimeout(() => {
                 banner.style.display = 'none';
-            }, 10000);
+                if (container) {
+                    container.classList.remove('with-alert');
+                }
+            }, 15000);
+        }
+        
+        // Carregar e verificar notificações reais
+        async function carregarNotificacoesReais() {
+            try {
+                const response = await fetch(`${API_BASE}/chamados?limit=100`);
+                const data = await response.json();
+                
+                const agora = new Date();
+                let criticosVencidos = 0;
+                let altosProximosVencimento = 0;
+                let novosHoje = 0;
+                
+                // SLA por criticidade (em horas)
+                const slaHoras = {
+                    'Crítica': 4,
+                    'Alta': 8,
+                    'Média': 24,
+                    'Baixa': 48
+                };
+                
+                data.chamados.forEach(chamado => {
+                    // Pular chamados já resolvidos/fechados
+                    if (['Resolvido', 'Fechado'].includes(chamado.status)) return;
+                    
+                    const dataCriacao = new Date(chamado.data_criacao);
+                    const horasDecorridas = (agora - dataCriacao) / (1000 * 60 * 60);
+                    const slaLimite = slaHoras[chamado.criticidade] || 24;
+                    
+                    // Verificar SLA vencido
+                    if (horasDecorridas > slaLimite) {
+                        if (chamado.criticidade === 'Crítica') {
+                            criticosVencidos++;
+                        }
+                    }
+                    
+                    // Verificar próximos ao vencimento (75% do SLA)
+                    if (horasDecorridas > (slaLimite * 0.75) && horasDecorridas <= slaLimite) {
+                        if (chamado.criticidade === 'Alta') {
+                            altosProximosVencimento++;
+                        }
+                    }
+                    
+                    // Verificar chamados novos hoje
+                    const hojeInicio = new Date();
+                    hojeInicio.setHours(0, 0, 0, 0);
+                    if (dataCriacao >= hojeInicio) {
+                        novosHoje++;
+                    }
+                });
+                
+                // Atualizar contador de notificações
+                notificationCount = criticosVencidos + altosProximosVencimento + (novosHoje > 10 ? 1 : 0);
+                atualizarContadorNotificacoes();
+                
+                // Mostrar alertas baseados nos dados reais
+                if (criticosVencidos > 0) {
+                    mostrarAlertBanner('error', 
+                        `⚠️ ${criticosVencidos} chamado(s) crítico(s) com SLA vencido! Ação imediata necessária.`);
+                } else if (altosProximosVencimento > 0) {
+                    mostrarAlertBanner('warning', 
+                        `🕐 ${altosProximosVencimento} chamado(s) de alta prioridade próximos ao vencimento.`);
+                } else if (novosHoje > 15) {
+                    mostrarAlertBanner('info', 
+                        `📈 Alto volume de chamados hoje: ${novosHoje} novos chamados.`);
+                }
+                
+                console.log('🔔 Notificações carregadas:', {
+                    criticosVencidos,
+                    altosProximosVencimento,
+                    novosHoje,
+                    totalNotificacoes: notificationCount
+                });
+                
+            } catch (error) {
+                console.error('Erro ao carregar notificações:', error);
+            }
         }
         
         // Atualizar contador de notificações
@@ -3289,6 +4083,503 @@
             return data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
         }
 
+        // ===== FUNÇÕES DA SEÇÃO IA =====
+        let currentModule = 'triagem';
+        let chamadoIdSelecionadoTriagem = null;
+        let sugestaoIndexSelecionado = null;
+
+        // Navegação entre módulos de IA
+        function mostrarModuloIA(modulo) {
+            // Ocultar todos os módulos
+            document.querySelectorAll('.ia-module').forEach(m => m.classList.add('hidden'));
+            document.querySelectorAll('.ia-nav-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // Mostrar módulo selecionado
+            document.getElementById(`modulo${modulo.charAt(0).toUpperCase() + modulo.slice(1)}`).classList.remove('hidden');
+            document.querySelector(`[onclick="mostrarModuloIA('${modulo}')"]`).classList.add('active');
+            
+            currentModule = modulo;
+            
+            // Carregar dados específicos do módulo
+            carregarDadosModuloIA(modulo);
+        }
+
+        // Carregar dados específicos para cada módulo
+        async function carregarDadosModuloIA(modulo) {
+            switch(modulo) {
+                case 'triagem':
+                case 'sugestoes':
+                case 'relacionados':
+                    await carregarChamadosParaIA(modulo);
+                    break;
+                case 'relatorios':
+                    // Dados carregados sob demanda
+                    break;
+            }
+        }
+
+        // Carregar lista de chamados para seleção nos módulos de IA
+        async function carregarChamadosParaIA(modulo) {
+            try {
+                const response = await fetch(`${API_BASE}/chamados?size=100`);
+                const data = await response.json();
+                
+                let selectId;
+                switch(modulo) {
+                    case 'triagem':
+                        selectId = 'selectChamadoTriagem';
+                        break;
+                    case 'sugestoes':
+                        selectId = 'selectChamadoSugestao';
+                        break;
+                    case 'relacionados':
+                        selectId = 'selectChamadoRelacionado';
+                        break;
+                }
+                
+                const select = document.getElementById(selectId);
+                select.innerHTML = '<option value="">Selecione um chamado...</option>';
+                
+                // Verificar se os dados existem e se há chamados
+                if (data && data.chamados && Array.isArray(data.chamados)) {
+                    data.chamados.forEach(chamado => {
+                        const option = document.createElement('option');
+                        option.value = chamado.id;
+                        option.textContent = `#${chamado.numero_wex} - ${truncarTexto(chamado.descricao, 60)} (${chamado.cliente_solicitante})`;
+                        select.appendChild(option);
+                    });
+                } else {
+                    console.warn('Dados de chamados não encontrados ou malformados:', data);
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'Nenhum chamado encontrado';
+                    select.appendChild(option);
+                }
+                
+            } catch (error) {
+                console.error('Erro ao carregar chamados para IA:', error);
+                mostrarToast('error', 'Erro', 'Erro ao carregar chamados');
+            }
+        }
+
+        // ===== MÓDULO DE TRIAGEM AUTOMÁTICA =====
+        async function executarTriagem() {
+            const selectChamado = document.getElementById('selectChamadoTriagem');
+            const chamadoId = selectChamado.value;
+            
+            if (!chamadoId) {
+                mostrarToast('warning', 'Atenção', 'Selecione um chamado para triagem');
+                return;
+            }
+            
+            chamadoIdSelecionadoTriagem = chamadoId;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/chamados/${chamadoId}/triagem`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Erro na triagem automática');
+                }
+                
+                const resultado = await response.json();
+                exibirResultadoTriagem(resultado);
+                
+            } catch (error) {
+                console.error('Erro na triagem:', error);
+                mostrarToast('error', 'Erro', 'Erro ao executar triagem automática');
+            }
+        }
+
+        function exibirResultadoTriagem(resultado) {
+            document.getElementById('resultadoTriagem').classList.remove('hidden');
+            
+            // Atualizar informações básicas
+            document.getElementById('criticidadeAtual').textContent = resultado.criticidade_atual;
+            document.getElementById('criticidadeAtual').className = `badge badge-ia ${resultado.criticidade_atual.toLowerCase()}`;
+            
+            document.getElementById('criticidadeSugerida').textContent = resultado.criticidade_sugerida;
+            document.getElementById('criticidadeSugerida').className = `badge badge-ia ${resultado.criticidade_sugerida.toLowerCase()}`;
+            
+            document.getElementById('confiancaTriagem').textContent = `${(resultado.confianca * 100).toFixed(1)}%`;
+            document.getElementById('scoreQualidade').textContent = `${resultado.score_qualidade_sugerido}/100`;
+            
+            // Fatores identificados
+            const fatoresContainer = document.getElementById('fatoresLista');
+            fatoresContainer.innerHTML = '';
+            resultado.fatores_identificados.forEach(fator => {
+                const div = document.createElement('div');
+                div.className = 'fator-item';
+                div.textContent = fator;
+                fatoresContainer.appendChild(div);
+            });
+            
+            // Sugestões de melhoria
+            const sugestoesContainer = document.getElementById('sugestoesLista');
+            sugestoesContainer.innerHTML = '';
+            resultado.sugestoes_adicao.forEach(sugestao => {
+                const div = document.createElement('div');
+                div.className = 'sugestao-item';
+                div.textContent = sugestao;
+                sugestoesContainer.appendChild(div);
+            });
+            
+            // Tags sugeridas
+            const tagsContainer = document.getElementById('tagsLista');
+            tagsContainer.innerHTML = '';
+            resultado.tags_sugeridas.forEach(tag => {
+                const span = document.createElement('span');
+                span.className = 'tag-item badge badge-secondary';
+                span.textContent = tag;
+                tagsContainer.appendChild(span);
+            });
+        }
+
+        async function aplicarTriagem() {
+            if (!chamadoIdSelecionadoTriagem) {
+                mostrarToast('warning', 'Atenção', 'Nenhuma triagem para aplicar');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/triagem/aplicar/${chamadoIdSelecionadoTriagem}`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao aplicar triagem');
+                }
+                
+                const resultado = await response.json();
+                mostrarToast('success', 'Sucesso', 'Triagem aplicada com sucesso!');
+                
+                // Atualizar interface
+                carregarChamados();
+                carregarDashboard();
+                
+            } catch (error) {
+                console.error('Erro ao aplicar triagem:', error);
+                mostrarToast('error', 'Erro', 'Erro ao aplicar triagem');
+            }
+        }
+
+        function limparTriagem() {
+            document.getElementById('resultadoTriagem').classList.add('hidden');
+            document.getElementById('selectChamadoTriagem').value = '';
+            chamadoIdSelecionadoTriagem = null;
+        }
+
+        // ===== MÓDULO DE SUGESTÕES DE FOLLOW-UP =====
+        async function obterSugestoes() {
+            const selectChamado = document.getElementById('selectChamadoSugestao');
+            const chamadoId = selectChamado.value;
+            
+            if (!chamadoId) {
+                mostrarToast('warning', 'Atenção', 'Selecione um chamado para obter sugestões');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/chamados/${chamadoId}/sugestoes-followup`);
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao obter sugestões');
+                }
+                
+                const resultado = await response.json();
+                exibirResultadoSugestoes(resultado);
+                
+            } catch (error) {
+                console.error('Erro ao obter sugestões:', error);
+                mostrarToast('error', 'Erro', 'Erro ao obter sugestões de follow-up');
+            }
+        }
+
+        function exibirResultadoSugestoes(resultado) {
+            document.getElementById('resultadoSugestoes').classList.remove('hidden');
+            
+            // Contexto do chamado
+            const contextoContainer = document.getElementById('contextoChamado');
+            contextoContainer.innerHTML = `
+                <div class="contexto-item">
+                    <strong>Status:</strong> ${resultado.contexto.status_atual}<br>
+                    <strong>Criticidade:</strong> ${resultado.contexto.criticidade}<br>
+                    <strong>Tempo desde criação:</strong> ${resultado.contexto.tempo_desde_criacao_horas.toFixed(1)} horas<br>
+                    <strong>Follow-ups existentes:</strong> ${resultado.contexto.total_followups_existentes}
+                </div>
+            `;
+            
+            // Sugestões principais
+            const sugestoesContainer = document.getElementById('sugestoesPrincipais');
+            sugestoesContainer.innerHTML = '';
+            resultado.sugestoes_principais.forEach((sugestao, index) => {
+                const div = document.createElement('div');
+                div.className = 'sugestao-item';
+                div.innerHTML = `
+                    <div onclick="selecionarSugestao(${index})" style="cursor: pointer;">
+                        ${sugestao}
+                    </div>
+                `;
+                sugestoesContainer.appendChild(div);
+            });
+            
+            // Exemplos do histórico
+            const exemploContainer = document.getElementById('exemplosSimilares');
+            exemploContainer.innerHTML = '';
+            resultado.exemplos_historico.forEach(exemplo => {
+                const div = document.createElement('div');
+                div.className = 'exemplo-historico';
+                div.innerHTML = `
+                    <strong>Chamado Similar #${exemplo.chamado_similar_id}</strong>
+                    <small>(Similaridade: ${(exemplo.score_similaridade * 100).toFixed(1)}%)</small>
+                    <ul>
+                        ${exemplo.followups.map(f => `<li><strong>${f.tipo}:</strong> ${f.descricao}</li>`).join('')}
+                    </ul>
+                `;
+                exemploContainer.appendChild(div);
+            });
+            
+            // Salvar dados para uso posterior
+            window.dadosSugestaoAtual = resultado;
+        }
+
+        function selecionarSugestao(index) {
+            sugestaoIndexSelecionado = index;
+            
+            // Destacar sugestão selecionada
+            document.querySelectorAll('#sugestoesPrincipais .sugestao-item').forEach((item, i) => {
+                if (i === index) {
+                    item.style.background = '#c8e6c9';
+                    item.style.borderLeft = '4px solid #4caf50';
+                } else {
+                    item.style.background = '#f3e5f5';
+                    item.style.borderLeft = '3px solid #9c27b0';
+                }
+            });
+        }
+
+        async function criarFollowupSugerido() {
+            if (sugestaoIndexSelecionado === null) {
+                mostrarToast('warning', 'Atenção', 'Selecione uma sugestão primeiro');
+                return;
+            }
+            
+            const chamadoId = document.getElementById('selectChamadoSugestao').value;
+            const autor = prompt('Digite seu nome:');
+            
+            if (!autor) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/chamados/${chamadoId}/followup-sugerido`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sugestao_index: sugestaoIndexSelecionado,
+                        autor: autor
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao criar follow-up');
+                }
+                
+                const resultado = await response.json();
+                mostrarToast('success', 'Sucesso', 'Follow-up criado com sucesso!');
+                
+                // Resetar seleção
+                sugestaoIndexSelecionado = null;
+                document.querySelectorAll('#sugestoesPrincipais .sugestao-item').forEach(item => {
+                    item.style.background = '#f3e5f5';
+                    item.style.borderLeft = '3px solid #9c27b0';
+                });
+                
+            } catch (error) {
+                console.error('Erro ao criar follow-up:', error);
+                mostrarToast('error', 'Erro', 'Erro ao criar follow-up sugerido');
+            }
+        }
+
+        // ===== MÓDULO DE CHAMADOS RELACIONADOS =====
+        function atualizarScoreMinimo() {
+            const slider = document.getElementById('scoreMinimo');
+            const display = document.getElementById('scoreValor');
+            display.textContent = slider.value;
+        }
+
+        async function buscarRelacionados() {
+            const selectChamado = document.getElementById('selectChamadoRelacionado');
+            const chamadoId = selectChamado.value;
+            const scoreMinimo = document.getElementById('scoreMinimo').value;
+            const limite = document.getElementById('limiteResultados').value;
+            
+            if (!chamadoId) {
+                mostrarToast('warning', 'Atenção', 'Selecione um chamado para análise');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/chamados/${chamadoId}/relacionados?score_minimo=${scoreMinimo}&limite=${limite}`);
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar chamados relacionados');
+                }
+                
+                const resultado = await response.json();
+                exibirResultadoRelacionados(resultado);
+                
+            } catch (error) {
+                console.error('Erro ao buscar relacionados:', error);
+                mostrarToast('error', 'Erro', 'Erro ao buscar chamados relacionados');
+            }
+        }
+
+        function exibirResultadoRelacionados(resultado) {
+            document.getElementById('resultadoRelacionados').classList.remove('hidden');
+            
+            // Chamado principal
+            const principalContainer = document.getElementById('chamadoPrincipalInfo');
+            principalContainer.innerHTML = `
+                <div class="chamado-principal">
+                    <strong>#${resultado.chamado_principal.numero_wex}</strong> - ${resultado.chamado_principal.cliente}<br>
+                    <small>${resultado.chamado_principal.descricao}</small><br>
+                    <span class="badge badge-ia ${resultado.chamado_principal.criticidade.toLowerCase()}">${resultado.chamado_principal.criticidade}</span>
+                    <span class="badge">${resultado.chamado_principal.status}</span>
+                </div>
+            `;
+            
+            // Lista de relacionados
+            const relacionadosContainer = document.getElementById('listaRelacionados');
+            relacionadosContainer.innerHTML = '';
+            
+            if (resultado.chamados_similares.length === 0) {
+                relacionadosContainer.innerHTML = '<p>Nenhum chamado relacionado encontrado com os critérios especificados.</p>';
+            } else {
+                resultado.chamados_similares.forEach(relacionado => {
+                    const div = document.createElement('div');
+                    div.className = 'relacionado-item';
+                    div.innerHTML = `
+                        <div class="relacionado-header">
+                            <strong>#${relacionado.numero_wex}</strong> - ${relacionado.cliente}
+                            <span class="relacionado-score">${(relacionado.score_similaridade * 100).toFixed(1)}%</span>
+                        </div>
+                        <div>${relacionado.descricao}</div>
+                        <div class="relacionado-status">
+                            <span class="badge badge-ia ${relacionado.criticidade.toLowerCase()}">${relacionado.criticidade}</span>
+                            <span class="badge">${relacionado.status}</span>
+                            <small>${formatarData(relacionado.data_criacao)}</small>
+                        </div>
+                        <div class="relacionado-motivos">
+                            ${relacionado.motivos.map(motivo => `<span class="motivo-tag">${motivo}</span>`).join('')}
+                        </div>
+                    `;
+                    relacionadosContainer.appendChild(div);
+                });
+            }
+            
+            // Padrões identificados
+            const padroesContainer = document.getElementById('padroesLista');
+            padroesContainer.innerHTML = '';
+            resultado.padroes_identificados.forEach(padrao => {
+                const div = document.createElement('div');
+                div.className = 'padrao-item';
+                div.textContent = padrao;
+                padroesContainer.appendChild(div);
+            });
+        }
+
+        // ===== MÓDULO DE RELATÓRIOS DE IA =====
+        async function gerarRelatorioIA() {
+            const periodo = document.getElementById('periodoAnalise').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/relatorios/padroes-ia?dias=${periodo}`);
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao gerar relatório');
+                }
+                
+                const resultado = await response.json();
+                exibirRelatorioIA(resultado);
+                
+            } catch (error) {
+                console.error('Erro ao gerar relatório:', error);
+                mostrarToast('error', 'Erro', 'Erro ao gerar relatório de IA');
+            }
+        }
+
+        function exibirRelatorioIA(resultado) {
+            document.getElementById('resultadoRelatorio').classList.remove('hidden');
+            
+            // Métricas principais
+            document.getElementById('totalChamadosPeriodo').textContent = resultado.total_chamados;
+            document.getElementById('totalGruposSimilares').textContent = resultado.total_grupos_similares;
+            document.getElementById('clientesAtivos').textContent = resultado.clientes_mais_ativos.length;
+            
+            // Padrões globais
+            const padroesContainer = document.getElementById('padroesGlobais');
+            padroesContainer.innerHTML = '';
+            if (resultado.padroes_globais.length === 0) {
+                padroesContainer.innerHTML = '<p>Nenhum padrão específico identificado no período.</p>';
+            } else {
+                resultado.padroes_globais.forEach(padrao => {
+                    const div = document.createElement('div');
+                    div.className = 'padrao-item';
+                    div.textContent = padrao;
+                    padroesContainer.appendChild(div);
+                });
+            }
+            
+            // Distribuição por criticidade
+            const criticidadeContainer = document.getElementById('graficoCriticidade');
+            criticidadeContainer.innerHTML = '';
+            Object.entries(resultado.distribuicao_criticidade).forEach(([criticidade, count]) => {
+                const div = document.createElement('div');
+                div.style.display = 'flex';
+                div.style.justifyContent = 'space-between';
+                div.style.padding = '0.5rem';
+                div.style.background = 'white';
+                div.style.marginBottom = '0.5rem';
+                div.style.borderRadius = '4px';
+                div.innerHTML = `
+                    <span class="badge badge-ia ${criticidade.toLowerCase()}">${criticidade}</span>
+                    <strong>${count} chamados</strong>
+                `;
+                criticidadeContainer.appendChild(div);
+            });
+            
+            // Ranking de clientes
+            const clientesContainer = document.getElementById('rankingClientes');
+            clientesContainer.innerHTML = '';
+            resultado.clientes_mais_ativos.forEach((cliente, index) => {
+                const div = document.createElement('div');
+                div.style.display = 'flex';
+                div.style.justifyContent = 'space-between';
+                div.style.padding = '0.5rem';
+                div.style.background = 'white';
+                div.style.marginBottom = '0.5rem';
+                div.style.borderRadius = '4px';
+                div.innerHTML = `
+                    <span><strong>#${index + 1}</strong> ${cliente.cliente}</span>
+                    <span class="badge badge-secondary">${cliente.total_chamados} chamados</span>
+                `;
+                clientesContainer.appendChild(div);
+            });
+        }
+
+        // Inicializar seção IA na carga da página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Event listeners para inputs
+            document.getElementById('scoreMinimo').addEventListener('input', atualizarScoreMinimo);
+            
+            // Carregar dados iniciais
+            carregarDadosModuloIA('triagem');
+        });
+
         // Auto-refresh a cada 30 segundos
         setInterval(() => {
             carregarDashboard();
@@ -3296,5 +4587,11 @@
             carregarChamados();
         }, 30000);
     </script>
+
+    <!-- Modal para detalhes do chamado -->
+    <div id="chamadoModal" class="modal" style="display: none;">
+        <!-- Conteúdo será inserido dinamicamente -->
+    </div>
+
 </body>
 </html>

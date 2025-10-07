@@ -83,3 +83,31 @@ class ChamadoFiltros(BaseModel):
     busca_texto: Optional[str] = None
     page: int = Field(default=1, ge=1)
     size: int = Field(default=20, ge=1, le=100)
+
+# Schemas para Sistema de IA
+class TriagemAutomaticaResponse(BaseModel):
+    id_chamado: int
+    criticidade_sugerida: CriticidadeChamado
+    confianca: float = Field(ge=0.0, le=1.0)
+    fatores_identificados: List[str]
+    sugestoes_adicao: List[str]
+    score_qualidade: int = Field(ge=0, le=100)
+
+class SugestaoFollowUpResponse(BaseModel):
+    id_chamado: int
+    sugestoes: List[str]
+    proximo_tipo_sugerido: TipoFollowUp
+    prioridade: str  # "alta", "media", "baixa"
+    
+class ChamadosRelacionadosResponse(BaseModel):
+    id_chamado: int
+    chamados_similares: List[dict]  # [{"id": int, "score": float, "motivo": str}]
+    padroes_identificados: List[str]
+
+class RelatorioIA(BaseModel):
+    periodo_inicio: datetime
+    periodo_fim: datetime
+    total_triagens: int
+    assertividade_triagem: float  # percentual de acerto
+    economia_tempo: float  # horas economizadas
+    padroes_identificados: List[str]

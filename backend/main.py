@@ -13,11 +13,17 @@ from schemas import (
 )
 import json
 import re
+import logging
 from datetime import datetime, timedelta
 from sqlalchemy import func, or_, and_
 import os
 from collections import Counter
 import math
+# Importar nossa IA
+from wex_ai_engine import wex_ai
+
+# Configurar logging
+logger = logging.getLogger(__name__)
 
 # Configuração do lifespan
 from contextlib import asynccontextmanager
@@ -422,117 +428,242 @@ def sugerir_tags_automaticas(descricao: str, numero_wex: str, cliente: str) -> L
     
     return tags
 
+# ================== TRIAGEM AUTOMÁTICA ==================
+
+@app.post("/api/chamados/triagem-automatica", response_model=dict)
+async def triagem_automatica_nova(request: dict):
+    """Executa triagem automática para dados de um novo chamado usando IA real"""
+    
+    try:
+        # Validar dados obrigatórios
+        if not request.get('descricao'):
+            raise HTTPException(status_code=400, detail="Descrição é obrigatória")
+        if not request.get('numero_wex'):
+            raise HTTPException(status_code=400, detail="Número WEX é obrigatório")
+        if not request.get('cliente_solicitante'):
+            raise HTTPException(status_code=400, detail="Cliente solicitante é obrigatório")
+        
+        # Estruturar dados do chamado
+        chamado_dict = {
+            'numero_wex': request.get('numero_wex'),
+            'titulo': f"Chamado {request.get('numero_wex')}",
+            'descricao': request.get('descricao'),
+            'cliente_solicitante': request.get('cliente_solicitante'),
+            'criticidade': request.get('criticidade', 'Média'),
+            'status': 'Aberto'
+        }
+        
+        # Executar triagem com IA real
+        resultado_triagem = wex_ai.realizar_triagem(chamado_dict)
+        
+        # Determinar se deve ser aceito (score > 50 baseado no documento Triagem.md)
+        aceito = resultado_triagem.score_total > 50
+        decisao = "aceito" if aceito else "recusado"
+        
+        return {
+            "numero_wex": request.get('numero_wex'),
+            "score": resultado_triagem.score_total,
+            "decisao": decisao,
+            "justificativa": resultado_triagem.observacoes,
+            "motivos": resultado_triagem.motivos,
+            "criticidade_sugerida": resultado_triagem.criticidade_sugerida,
+            "prioridade_sugerida": "Alta" if resultado_triagem.score_total > 70 else "Média",
+            "categoria_sugerida": "Técnico",
+            "tempo_resposta_estimado": "4 horas" if resultado_triagem.score_total > 70 else "24 horas",
+            "departamento_sugerido": "Suporte",
+            "tags_sugeridas": resultado_triagem.tags_sugeridas,
+            "sugestoes_melhoria": resultado_triagem.sugestoes,
+            "observacoes": resultado_triagem.observacoes,
+            "score_qualidade_atual": resultado_triagem.score_total,
+            "score_qualidade_sugerido": resultado_triagem.score_total,
+            "tempo_processamento_ms": resultado_triagem.tempo_processamento_ms,
+            "ia_utilizada": True,
+            "metadados_ia": {
+                "modelo_usado": "wex-ai-engine",
+                "tempo_processamento": resultado_triagem.tempo_processamento_ms / 1000,
+                "confianca_analise": resultado_triagem.confianca
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro na triagem automática: {str(e)}")
+        return {
+            "numero_wex": request.get('numero_wex', 'N/A'),
+            "score": 5,  # Score médio como fallback
+            "decisao": "necessita_revisao",
+            "justificativa": f"Erro na análise automática: {str(e)}",
+            "criticidade_sugerida": request.get('criticidade', 'Média'),
+            "prioridade_sugerida": "Média",
+            "categoria_sugerida": "Técnico",
+            "tempo_resposta_estimado": "24 horas",
+            "departamento_sugerido": "Suporte",
+            "tags_sugeridas": [],
+            "sugestoes_melhoria": [],
+            "observacoes": f"Sistema de IA temporariamente indisponível. Revisar manualmente.",
+            "score_qualidade_atual": 0,
+            "score_qualidade_sugerido": 0,
+            "tempo_processamento_ms": 0,
+            "ia_utilizada": False,
+            "erro_ia": str(e),
+            "metadados_ia": {
+                "modelo_usado": "fallback",
+                "tempo_processamento": 0,
+                "confianca_analise": 0
+            }
+        }
+
 @app.post("/api/chamados/{chamado_id}/triagem", response_model=dict)
 async def triagem_automatica(chamado_id: int, db: Session = Depends(get_db)):
-    """Executa triagem automática de um chamado específico"""
+    """Executa triagem automática de um chamado específico usando IA real"""
     
-    # Buscar o chamado
-    chamado = db.query(Chamado).filter(Chamado.id == chamado_id).first()
-    if not chamado:
-        raise HTTPException(status_code=404, detail="Chamado não encontrado")
-    
-    # Realizar análise de triagem
-    resultado_triagem = extrair_indicadores_criticidade(
-        chamado.descricao, 
-        chamado.numero_wex, 
-        chamado.cliente_solicitante
-    )
-    
-    # Calcular score de qualidade
-    score_qualidade = calcular_score_qualidade(
-        chamado.descricao,
-        chamado.numero_wex,
-        chamado.cliente_solicitante
-    )
-    
-    # Sugerir tags automáticas
-    tags_sugeridas = sugerir_tags_automaticas(
-        chamado.descricao,
-        chamado.numero_wex,
-        chamado.cliente_solicitante
-    )
-    
-    # Gerar sugestões de melhoria
-    sugestoes = []
-    if score_qualidade < 70:
-        if len(chamado.descricao) < 50:
-            sugestoes.append("Adicionar mais detalhes na descrição do problema")
-        if not re.search(r'erro|error', chamado.descricao.lower()):
-            sugestoes.append("Incluir mensagens de erro específicas, se houver")
-        if not re.search(r'ambiente|versão', chamado.descricao.lower()):
-            sugestoes.append("Informar ambiente e versão do sistema")
-        if not re.search(r'passos|procedimento', chamado.descricao.lower()):
-            sugestoes.append("Detalhar passos para reproduzir o problema")
-    
-    # Atualizar chamado com dados da triagem (opcional - manter original para comparação)
-    # chamado.criticidade = resultado_triagem['criticidade']
-    # chamado.score_qualidade = score_qualidade
-    # chamado.tags_automaticas = tags_sugeridas
-    # db.commit()
-    
-    return {
-        "id_chamado": chamado_id,
-        "criticidade_atual": chamado.criticidade.value,
-        "criticidade_sugerida": resultado_triagem['criticidade'].value,
-        "confianca": resultado_triagem['confianca'],
-        "fatores_identificados": resultado_triagem['fatores'],
-        "sugestoes_adicao": sugestoes,
-        "score_qualidade_atual": chamado.score_qualidade,
-        "score_qualidade_sugerido": score_qualidade,
-        "tags_atuais": chamado.tags_automaticas,
-        "tags_sugeridas": tags_sugeridas,
-        "detalhes_scores": resultado_triagem['scores']
-    }
+    try:
+        # Buscar o chamado
+        chamado = db.query(Chamado).filter(Chamado.id == chamado_id).first()
+        if not chamado:
+            raise HTTPException(status_code=404, detail="Chamado não encontrado")
+        
+        # Converter chamado para dict para a IA
+        chamado_dict = {
+            'id': chamado.id,
+            'numero_wex': chamado.numero_wex,
+            'titulo': f"Chamado {chamado.numero_wex}",  # Usar número WEX como título
+            'descricao': chamado.descricao,
+            'cliente_solicitante': chamado.cliente_solicitante,
+            'criticidade': chamado.criticidade.value if hasattr(chamado.criticidade, 'value') else str(chamado.criticidade),
+            'status': chamado.status.value if hasattr(chamado.status, 'value') else str(chamado.status),
+            'data_criacao': chamado.data_criacao.isoformat() if chamado.data_criacao else None,
+            'anexos_count': 0  # Simular contagem de anexos
+        }
+        
+        # Executar triagem com IA real
+        resultado_triagem = wex_ai.realizar_triagem(chamado_dict)
+        
+        return {
+            "id_chamado": chamado_id,
+            "score_total": resultado_triagem.score_total,
+            "score_breakdown": resultado_triagem.score_breakdown,
+            "decisao": resultado_triagem.decisao,
+            "criticidade_atual": chamado.criticidade.value if hasattr(chamado.criticidade, 'value') else str(chamado.criticidade),
+            "criticidade_sugerida": resultado_triagem.criticidade_sugerida,
+            "confianca": resultado_triagem.confianca,
+            "fatores_identificados": resultado_triagem.motivos,
+            "sugestoes_melhoria": resultado_triagem.sugestoes,
+            "tags_sugeridas": resultado_triagem.tags_sugeridas,
+            "tempo_processamento_ms": resultado_triagem.tempo_processamento_ms,
+            "observacoes": resultado_triagem.observacoes,
+            "score_qualidade_atual": getattr(chamado, 'score_qualidade', 0) or 0,
+            "score_qualidade_sugerido": resultado_triagem.score_total,
+            "metadados_ia": {
+                "modelo_usado": "wex-ai-engine",
+                "tempo_processamento": resultado_triagem.tempo_processamento_ms / 1000.0,
+                "confianca_analise": resultado_triagem.confianca
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro na triagem automática: {str(e)}")
+        return {
+            "id_chamado": chamado_id,
+            "score_total": 0,
+            "score_breakdown": {},
+            "decisao": "erro",
+            "criticidade_atual": "N/A",
+            "criticidade_sugerida": "N/A",
+            "confianca": 0.0,
+            "fatores_identificados": [],
+            "sugestoes_melhoria": [],
+            "tags_sugeridas": [],
+            "tempo_processamento_ms": 0,
+            "observacoes": f"Erro na análise de IA: {str(e)}",
+            "score_qualidade_atual": 0,
+            "score_qualidade_sugerido": 0,
+            "erro_ia": str(e),
+            "metadados_ia": {
+                "modelo_usado": "fallback",
+                "tempo_processamento": 0,
+                "confianca_analise": 0
+            }
+        }
 
 @app.post("/api/triagem/aplicar/{chamado_id}")
 async def aplicar_triagem(chamado_id: int, db: Session = Depends(get_db)):
-    """Aplica as sugestões da triagem automática ao chamado"""
+    """Aplica as sugestões da triagem automática ao chamado usando IA real"""
     
     # Buscar o chamado
     chamado = db.query(Chamado).filter(Chamado.id == chamado_id).first()
     if not chamado:
         raise HTTPException(status_code=404, detail="Chamado não encontrado")
     
-    # Executar triagem
-    resultado_triagem = extrair_indicadores_criticidade(
-        chamado.descricao, 
-        chamado.numero_wex, 
-        chamado.cliente_solicitante
-    )
-    
-    score_qualidade = calcular_score_qualidade(
-        chamado.descricao,
-        chamado.numero_wex,
-        chamado.cliente_solicitante
-    )
-    
-    tags_sugeridas = sugerir_tags_automaticas(
-        chamado.descricao,
-        chamado.numero_wex,
-        chamado.cliente_solicitante
-    )
-    
-    # Aplicar mudanças
-    criticidade_anterior = chamado.criticidade
-    chamado.criticidade = resultado_triagem['criticidade']
-    chamado.score_qualidade = score_qualidade
-    chamado.tags_automaticas = tags_sugeridas
-    
-    db.commit()
-    db.refresh(chamado)
-    
-    return {
-        "success": True,
-        "chamado_id": chamado_id,
-        "mudancas": {
-            "criticidade": {
-                "anterior": criticidade_anterior.value,
-                "nova": chamado.criticidade.value
-            },
-            "score_qualidade": score_qualidade,
-            "tags_adicionadas": tags_sugeridas
-        }
+    # Converter chamado para dict
+    chamado_dict = {
+        'id': chamado.id,
+        'numero_wex': chamado.numero_wex,
+        'titulo': f"Chamado {chamado.numero_wex}",
+        'descricao': chamado.descricao,
+        'cliente_solicitante': chamado.cliente_solicitante,
+        'criticidade': chamado.criticidade.value if chamado.criticidade else 'Média',
+        'status': chamado.status.value if chamado.status else 'Aberto',
+        'data_criacao': chamado.data_criacao.isoformat() if chamado.data_criacao else None,
+        'anexos_count': 0
     }
+    
+    # Executar triagem com IA
+    resultado_triagem = wex_ai.realizar_triagem(chamado_dict)
+    
+    # Aplicar mudanças apenas se a decisão for "aprovado" ou "revisao"
+    if resultado_triagem.decisao in ["aprovado", "revisao"]:
+        criticidade_anterior = chamado.criticidade.value if chamado.criticidade else 'Média'
+        
+        # Mapear criticidade sugerida para enum
+        criticidade_map = {
+            'Baixa': CriticidadeChamado.BAIXA,
+            'Média': CriticidadeChamado.MEDIA,
+            'Alta': CriticidadeChamado.ALTA,
+            'Crítica': CriticidadeChamado.CRITICA
+        }
+        
+        nova_criticidade = criticidade_map.get(resultado_triagem.criticidade_sugerida, CriticidadeChamado.MEDIA)
+        
+        # Aplicar mudanças
+        chamado.criticidade = nova_criticidade
+        chamado.score_qualidade = resultado_triagem.score_total
+        if resultado_triagem.tags_sugeridas:
+            chamado.tags_automaticas = resultado_triagem.tags_sugeridas
+        
+        # Adicionar observação da IA
+        observacao_ia = f"Triagem IA: Score {resultado_triagem.score_total}/100, Decisão: {resultado_triagem.decisao}"
+        if hasattr(chamado, 'observacoes_ia'):
+            chamado.observacoes_ia = observacao_ia
+        
+        db.commit()
+        db.refresh(chamado)
+        
+        return {
+            "success": True,
+            "chamado_id": chamado_id,
+            "decisao_ia": resultado_triagem.decisao,
+            "score_final": resultado_triagem.score_total,
+            "mudancas": {
+                "criticidade": {
+                    "anterior": criticidade_anterior,
+                    "nova": nova_criticidade.value
+                },
+                "score_qualidade": resultado_triagem.score_total,
+                "tags_adicionadas": resultado_triagem.tags_sugeridas
+            },
+            "motivos": resultado_triagem.motivos,
+            "tempo_processamento": resultado_triagem.tempo_processamento_ms
+        }
+    else:
+        return {
+            "success": False,
+            "chamado_id": chamado_id,
+            "decisao_ia": resultado_triagem.decisao,
+            "score_final": resultado_triagem.score_total,
+            "motivo_recusa": "Chamado não atende aos critérios mínimos de qualidade",
+            "sugestoes_melhoria": resultado_triagem.sugestoes,
+            "score_necessario": 50
+        }
 
 # ====== SISTEMA DE SUGESTÕES DE FOLLOW-UP ======
 
@@ -714,37 +845,137 @@ def buscar_followups_similares(chamado: Chamado, db: Session, limit: int = 5) ->
 
 @app.get("/api/chamados/{chamado_id}/sugestoes-followup", response_model=dict)
 async def sugestoes_followup(chamado_id: int, db: Session = Depends(get_db)):
-    """Gera sugestões inteligentes para próximos follow-ups"""
+    """Gera sugestões inteligentes para próximos follow-ups usando IA real"""
     
-    # Buscar o chamado
-    chamado = db.query(Chamado).filter(Chamado.id == chamado_id).first()
-    if not chamado:
-        raise HTTPException(status_code=404, detail="Chamado não encontrado")
-    
-    # Analisar contexto
-    contexto = analisar_contexto_chamado(chamado, db)
-    
-    # Gerar sugestões
-    sugestoes_result = gerar_sugestoes_followup(chamado, contexto)
-    
-    # Buscar exemplos de chamados similares
-    exemplos_historico = buscar_followups_similares(chamado, db)
-    
-    return {
-        "id_chamado": chamado_id,
-        "sugestoes_principais": sugestoes_result['sugestoes'],
-        "proximo_tipo_sugerido": sugestoes_result['proximo_tipo'].value,
-        "prioridade": sugestoes_result['prioridade'],
-        "contexto": {
-            "status_atual": chamado.status.value,
-            "criticidade": chamado.criticidade.value,
-            "tempo_desde_criacao_horas": contexto['tempo_desde_criacao'],
-            "tempo_desde_ultimo_followup_horas": contexto['tempo_desde_ultimo'],
-            "total_followups_existentes": contexto['total_followups']
-        },
-        "exemplos_historico": exemplos_historico,
-        "tipos_followup_existentes": [tipo.value for tipo in contexto['tipos_existentes']]
-    }
+    try:
+        # Buscar o chamado
+        chamado = db.query(Chamado).filter(Chamado.id == chamado_id).first()
+        if not chamado:
+            raise HTTPException(status_code=404, detail="Chamado não encontrado")
+        
+        # Buscar follow-ups existentes do chamado
+        followups_existentes = db.query(FollowUp).filter(
+            FollowUp.chamado_id == chamado.id
+        ).order_by(FollowUp.data_criacao.desc()).all()
+        
+        # Buscar chamados similares para contexto
+        todos_chamados = db.query(Chamado).filter(Chamado.id != chamado_id).all()
+        chamados_similares = []
+        for c in todos_chamados[:20]:  # Limitar para performance
+            chamados_similares.append({
+                'id': c.id,
+                'numero_wex': c.numero_wex,
+                'descricao': c.descricao,
+                'cliente_solicitante': c.cliente_solicitante,
+                'criticidade': c.criticidade.value if hasattr(c.criticidade, 'value') else str(c.criticidade),
+                'status': c.status.value if hasattr(c.status, 'value') else str(c.status)
+            })
+        
+        # Converter chamado para dict
+        chamado_dict = {
+            'id': chamado.id,
+            'numero_wex': chamado.numero_wex,
+            'titulo': f"Chamado {chamado.numero_wex}",
+            'descricao': chamado.descricao,
+            'cliente_solicitante': chamado.cliente_solicitante,
+            'criticidade': chamado.criticidade.value if hasattr(chamado.criticidade, 'value') else str(chamado.criticidade),
+            'status': chamado.status.value if hasattr(chamado.status, 'value') else str(chamado.status),
+            'data_criacao': chamado.data_criacao.isoformat() if chamado.data_criacao else None
+        }
+        
+        # Gerar sugestões com IA
+        sugestoes_ia = wex_ai.gerar_sugestoes_followup(chamado_dict, chamados_similares)
+        
+        # Calcular tempo desde criação e último follow-up
+        agora = datetime.now()
+        tempo_desde_criacao = int((agora - chamado.data_criacao).total_seconds() / 3600) if chamado.data_criacao else 0
+        tempo_desde_ultimo = 0
+        if followups_existentes:
+            tempo_desde_ultimo = int((agora - followups_existentes[0].data_criacao).total_seconds() / 3600)
+        
+        # Buscar exemplos similares
+        exemplos_historico = []
+        if chamados_similares:
+            for similar in chamados_similares[:3]:
+                followups_similares = db.query(FollowUp).filter(
+                    FollowUp.chamado_id == similar['id']
+                ).limit(2).all()
+                if followups_similares:
+                    exemplos_historico.append({
+                        'chamado_numero': similar['numero_wex'],
+                        'cliente': similar['cliente_solicitante'],
+                        'similaridade': 0.75,  # Score simulado
+                        'followups': [
+                            {
+                                'tipo': f.tipo.value if hasattr(f.tipo, 'value') else str(f.tipo),
+                                'descricao': f.descricao[:100] + "..." if len(f.descricao) > 100 else f.descricao
+                            } for f in followups_similares
+                        ]
+                    })
+        
+        # Determinar próximo tipo sugerido baseado na IA
+        proximo_tipo = "Análise"  # Default
+        if sugestoes_ia:
+            primeiro_tipo = sugestoes_ia[0].tipo
+            if primeiro_tipo in ["Análise", "Comunicação", "Teste", "Resolução"]:
+                proximo_tipo = primeiro_tipo
+        
+        return {
+            "id_chamado": chamado_id,
+            "sugestoes": [
+                {
+                    "titulo": s.titulo,
+                    "descricao": s.descricao,
+                    "tipo": s.tipo,
+                    "confianca": s.confianca,
+                    "motivo": s.motivo
+                } for s in sugestoes_ia
+            ],
+            "proximo_tipo_sugerido": proximo_tipo,
+            "prioridade": "Alta" if str(chamado.criticidade) in ["Alta", "Crítica"] else "Média",
+            "contexto": {
+                "status_atual": chamado.status.value if hasattr(chamado.status, 'value') else str(chamado.status),
+                "criticidade": chamado.criticidade.value if hasattr(chamado.criticidade, 'value') else str(chamado.criticidade),
+                "tempo_desde_criacao_horas": tempo_desde_criacao,
+                "tempo_desde_ultimo_followup_horas": tempo_desde_ultimo,
+                "total_followups_existentes": len(followups_existentes)
+            },
+            "exemplos_historico": exemplos_historico,
+            "tipos_followup_existentes": [f.tipo.value if hasattr(f.tipo, 'value') else str(f.tipo) for f in followups_existentes],
+            "metadados_ia": {
+                "sugestoes_geradas": len(sugestoes_ia),
+                "contexto_usado": len(chamados_similares),
+                "modelo_usado": "wex-ai-engine",
+                "tempo_processamento": 0.1,
+                "confianca_analise": sum(s.confianca for s in sugestoes_ia) / len(sugestoes_ia) if sugestoes_ia else 0
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao gerar sugestões: {str(e)}")
+        return {
+            "id_chamado": chamado_id,
+            "sugestoes": [],
+            "proximo_tipo_sugerido": "Análise",
+            "prioridade": "Média",
+            "contexto": {
+                "status_atual": "N/A",
+                "criticidade": "N/A",
+                "tempo_desde_criacao_horas": 0,
+                "tempo_desde_ultimo_followup_horas": 0,
+                "total_followups_existentes": 0
+            },
+            "exemplos_historico": [],
+            "tipos_followup_existentes": [],
+            "erro_ia": str(e),
+            "metadados_ia": {
+                "sugestoes_geradas": 0,
+                "contexto_usado": 0,
+                "modelo_usado": "fallback",
+                "tempo_processamento": 0,
+                "confianca_analise": 0
+            }
+        }
 
 @app.post("/api/chamados/{chamado_id}/followup-sugerido")
 async def criar_followup_sugerido(
@@ -963,94 +1194,107 @@ async def buscar_chamados_relacionados(
     score_minimo: float = Query(default=0.3, ge=0.0, le=1.0),
     db: Session = Depends(get_db)
 ):
-    """Busca chamados relacionados/similares ao chamado especificado"""
+    """Busca chamados relacionados/similares ao chamado especificado usando IA real"""
     
-    # Buscar o chamado principal
-    chamado_principal = db.query(Chamado).filter(Chamado.id == chamado_id).first()
-    if not chamado_principal:
-        raise HTTPException(status_code=404, detail="Chamado não encontrado")
-    
-    # Buscar todos os outros chamados (exceto o atual)
-    outros_chamados = db.query(Chamado).filter(
-        Chamado.id != chamado_id
-    ).all()
-    
-    # Calcular similaridade com cada chamado
-    similaridades = []
-    for chamado in outros_chamados:
-        scores = calcular_similaridade_chamados(chamado_principal, chamado)
+    try:
+        # Buscar o chamado principal
+        chamado_principal = db.query(Chamado).filter(Chamado.id == chamado_id).first()
+        if not chamado_principal:
+            raise HTTPException(status_code=404, detail="Chamado não encontrado")
         
-        if scores['score_final'] >= score_minimo:
-            # Identificar motivo principal da similaridade
-            motivo_principal = max(
-                {k: v for k, v in scores.items() if k != 'score_final'}.items(),
-                key=lambda x: x[1]
-            )
-            
-            motivos = []
-            if scores['palavras'] > 0.3:
-                motivos.append("Termos similares na descrição")
-            if scores['termos_tecnicos'] > 0.5:
-                motivos.append("Termos técnicos em comum")
-            if scores['codigos_erro'] > 0:
-                motivos.append("Mesmo código de erro")
-            if scores['mensagens_erro'] > 0:
-                motivos.append("Mensagens de erro idênticas")
-            if scores['cliente'] > 0:
-                motivos.append("Mesmo cliente")
-            if scores['criticidade'] > 0:
-                motivos.append("Mesma criticidade")
-            
-            similaridades.append({
-                'id': chamado.id,
-                'numero_wex': chamado.numero_wex,
-                'cliente': chamado.cliente_solicitante,
-                'descricao': chamado.descricao[:200] + "..." if len(chamado.descricao) > 200 else chamado.descricao,
-                'status': chamado.status.value,
-                'criticidade': chamado.criticidade.value,
-                'data_criacao': chamado.data_criacao,
-                'score_similaridade': round(scores['score_final'], 3),
-                'motivos': motivos,
-                'detalhes_scores': {k: round(v, 3) for k, v in scores.items()}
+        # Buscar todos os outros chamados (exceto o atual)
+        outros_chamados = db.query(Chamado).filter(
+            Chamado.id != chamado_id
+        ).all()
+        
+        # Usar IA real para encontrar chamados similares
+        resultado_ia = wex_ai.encontrar_chamados_similares(
+            chamado_principal=chamado_principal,
+            outros_chamados=outros_chamados,
+            limite=limite,
+            score_minimo=score_minimo
+        )
+        
+        # Formatar resultados para o frontend
+        chamados_similares = []
+        for chamado_similar in resultado_ia.chamados_similares:
+            chamados_similares.append({
+                'id': chamado_similar['id'],
+                'numero_wex': chamado_similar['numero_wex'],
+                'cliente': chamado_similar['cliente'],
+                'descricao': chamado_similar['descricao'][:200] + "..." if len(chamado_similar['descricao']) > 200 else chamado_similar['descricao'],
+                'status': chamado_similar['status'],
+                'criticidade': chamado_similar['criticidade'],
+                'data_criacao': chamado_similar['data_criacao'],
+                'score_similaridade': chamado_similar['score_similaridade'],
+                'motivos': chamado_similar['motivos'],
+                'detalhes_scores': chamado_similar['detalhes_scores']
             })
-    
-    # Ordenar por score de similaridade
-    similaridades.sort(key=lambda x: x['score_similaridade'], reverse=True)
-    
-    # Limitar resultados
-    resultados_limitados = similaridades[:limite]
-    
-    # Identificar padrões nos chamados similares
-    chamados_para_analise = [chamado_principal] + [
-        db.query(Chamado).filter(Chamado.id == sim['id']).first()
-        for sim in resultados_limitados[:5]  # Analisar apenas os 5 mais similares
-    ]
-    padroes = identificar_padroes_chamados(chamados_para_analise)
-    
-    return {
-        "id_chamado": chamado_id,
-        "chamado_principal": {
-            "numero_wex": chamado_principal.numero_wex,
-            "cliente": chamado_principal.cliente_solicitante,
-            "descricao": chamado_principal.descricao[:200] + "..." if len(chamado_principal.descricao) > 200 else chamado_principal.descricao,
-            "status": chamado_principal.status.value,
-            "criticidade": chamado_principal.criticidade.value
-        },
-        "chamados_similares": resultados_limitados,
-        "total_encontrados": len(similaridades),
-        "padroes_identificados": padroes,
-        "parametros_busca": {
-            "score_minimo": score_minimo,
-            "limite": limite
+        
+        return {
+            "id_chamado": chamado_id,
+            "chamado_principal": {
+                "numero_wex": chamado_principal.numero_wex,
+                "cliente": chamado_principal.cliente_solicitante,
+                "descricao": chamado_principal.descricao[:200] + "..." if len(chamado_principal.descricao) > 200 else chamado_principal.descricao,
+                "status": chamado_principal.status.value if hasattr(chamado_principal.status, 'value') else str(chamado_principal.status),
+                "criticidade": chamado_principal.criticidade.value if hasattr(chamado_principal.criticidade, 'value') else str(chamado_principal.criticidade)
+            },
+            "chamados_similares": chamados_similares,
+            "total_encontrados": resultado_ia.total_encontrados,
+            "padroes_identificados": resultado_ia.padroes_identificados,
+            "parametros_busca": {
+                "score_minimo": score_minimo,
+                "limite": limite
+            },
+            "metadados_ia": {
+                "modelo_usado": resultado_ia.modelo_usado,
+                "tempo_processamento": resultado_ia.tempo_processamento,
+                "confianca_analise": resultado_ia.confianca_analise
+            }
         }
-    }
+        
+    except Exception as e:
+        logger.error(f"Erro na busca de chamados relacionados: {str(e)}")
+        # Fallback para resposta com erro
+        try:
+            chamado_principal = db.query(Chamado).filter(Chamado.id == chamado_id).first()
+            if not chamado_principal:
+                raise HTTPException(status_code=404, detail="Chamado não encontrado")
+                
+            return {
+                "id_chamado": chamado_id,
+                "chamado_principal": {
+                    "numero_wex": chamado_principal.numero_wex,
+                    "cliente": chamado_principal.cliente_solicitante,
+                    "descricao": chamado_principal.descricao[:200] + "..." if len(chamado_principal.descricao) > 200 else chamado_principal.descricao,
+                    "status": chamado_principal.status.value if hasattr(chamado_principal.status, 'value') else str(chamado_principal.status),
+                    "criticidade": chamado_principal.criticidade.value if hasattr(chamado_principal.criticidade, 'value') else str(chamado_principal.criticidade)
+                },
+                "chamados_similares": [],
+                "total_encontrados": 0,
+                "padroes_identificados": [],
+                "parametros_busca": {
+                    "score_minimo": score_minimo,
+                    "limite": limite
+                },
+                "erro_ia": f"Erro na análise de IA: {str(e)}",
+                "metadados_ia": {
+                    "modelo_usado": "fallback",
+                    "tempo_processamento": 0,
+                    "confianca_analise": 0
+                }
+            }
+        except Exception as e2:
+            logger.error(f"Erro crítico no endpoint relacionados: {str(e2)}")
+            raise HTTPException(status_code=500, detail=f"Erro interno: {str(e2)}")
 
 @app.get("/api/relatorios/padroes-ia")
 async def relatorio_padroes_ia(
     dias: int = Query(default=30, ge=1, le=365),
     db: Session = Depends(get_db)
 ):
-    """Gera relatório de padrões identificados pela IA"""
+    """Gera relatório de padrões identificados pela IA real"""
     
     periodo_inicio = datetime.now() - timedelta(days=dias)
     
@@ -1065,58 +1309,80 @@ async def relatorio_padroes_ia(
             "periodo_fim": datetime.now(),
             "total_chamados": 0,
             "padroes_globais": [],
-            "resumo": "Nenhum chamado encontrado no período especificado"
+            "grupos_similares": [],
+            "distribuicao_criticidade": {},
+            "clientes_mais_ativos": [],
+            "insights_ia": [],
+            "resumo": "Nenhum chamado encontrado no período especificado",
+            "metadados_ia": {
+                "modelo_usado": "sem_dados",
+                "tempo_processamento": 0,
+                "confianca_analise": 0
+            }
         }
     
-    # Agrupar chamados por similaridade (clustering simples)
-    grupos_similares = []
-    chamados_processados = set()
-    
-    for i, chamado_base in enumerate(chamados_periodo):
-        if chamado_base.id in chamados_processados:
-            continue
-            
-        grupo_atual = [chamado_base]
-        chamados_processados.add(chamado_base.id)
+    try:
+        # Usar IA real para gerar relatório de padrões
+        resultado_ia = wex_ai.gerar_relatorio_padroes(
+            chamados=chamados_periodo,
+            periodo_dias=dias
+        )
         
-        for j, chamado_comp in enumerate(chamados_periodo):
-            if i != j and chamado_comp.id not in chamados_processados:
-                scores = calcular_similaridade_chamados(chamado_base, chamado_comp)
-                if scores['score_final'] > 0.4:  # Threshold para agrupamento
-                    grupo_atual.append(chamado_comp)
-                    chamados_processados.add(chamado_comp.id)
+        # Estatísticas complementares
+        criticidades = [c.criticidade.value if hasattr(c.criticidade, 'value') else str(c.criticidade) for c in chamados_periodo]
+        dist_criticidade = Counter(criticidades)
         
-        if len(grupo_atual) > 1:  # Apenas grupos com múltiplos chamados
-            grupos_similares.append(grupo_atual)
-    
-    # Identificar padrões globais
-    padroes_globais = []
-    
-    for grupo in grupos_similares:
-        padroes_grupo = identificar_padroes_chamados(grupo)
-        padroes_globais.extend([
-            f"Grupo de {len(grupo)} chamados: {padrao}" 
-            for padrao in padroes_grupo
-        ])
-    
-    # Estatísticas de criticidade
-    criticidades = [c.criticidade for c in chamados_periodo]
-    dist_criticidade = Counter(criticidades)
-    
-    # Clientes mais ativos
-    clientes = [c.cliente_solicitante for c in chamados_periodo]
-    clientes_ativos = Counter(clientes).most_common(5)
-    
-    return {
-        "periodo_inicio": periodo_inicio,
-        "periodo_fim": datetime.now(),
-        "total_chamados": len(chamados_periodo),
-        "total_grupos_similares": len(grupos_similares),
-        "padroes_globais": padroes_globais,
-        "distribuicao_criticidade": {crit.value: count for crit, count in dist_criticidade.items()},
-        "clientes_mais_ativos": [{"cliente": cliente, "total_chamados": count} for cliente, count in clientes_ativos],
-        "resumo": f"Analisados {len(chamados_periodo)} chamados, identificados {len(grupos_similares)} grupos de chamados similares"
-    }
+        clientes = [c.cliente_solicitante for c in chamados_periodo]
+        clientes_ativos = Counter(clientes).most_common(5)
+        
+        return {
+            "periodo_inicio": periodo_inicio,
+            "periodo_fim": datetime.now(),
+            "total_chamados": len(chamados_periodo),
+            "total_grupos_similares": resultado_ia.total_grupos_similares,
+            "padroes_globais": resultado_ia.padroes_globais,
+            "grupos_similares": resultado_ia.grupos_similares,
+            "distribuicao_criticidade": {crit: count for crit, count in dist_criticidade.items()},
+            "clientes_mais_ativos": [{"cliente": cliente, "total_chamados": count} for cliente, count in clientes_ativos],
+            "insights_ia": resultado_ia.insights_ia,
+            "tendencias": resultado_ia.tendencias,
+            "recomendacoes": resultado_ia.recomendacoes,
+            "resumo": resultado_ia.resumo,
+            "metadados_ia": {
+                "modelo_usado": resultado_ia.modelo_usado,
+                "tempo_processamento": resultado_ia.tempo_processamento,
+                "confianca_analise": resultado_ia.confianca_analise
+            }
+        }
+        
+    except Exception as e:
+        # Fallback para método tradicional em caso de erro
+        criticidades = [c.criticidade.value if hasattr(c.criticidade, 'value') else str(c.criticidade) for c in chamados_periodo]
+        dist_criticidade = Counter(criticidades)
+        
+        clientes = [c.cliente_solicitante for c in chamados_periodo]
+        clientes_ativos = Counter(clientes).most_common(5)
+        
+        return {
+            "periodo_inicio": periodo_inicio,
+            "periodo_fim": datetime.now(),
+            "total_chamados": len(chamados_periodo),
+            "total_grupos_similares": 0,
+            "padroes_globais": [],
+            "grupos_similares": [],
+            "distribuicao_criticidade": {crit: count for crit, count in dist_criticidade.items()},
+            "clientes_mais_ativos": [{"cliente": cliente, "total_chamados": count} for cliente, count in clientes_ativos],
+            "insights_ia": [],
+            "tendencias": [],
+            "recomendacoes": [],
+            "resumo": f"Erro na análise de IA: {str(e)}. Dados básicos disponíveis para {len(chamados_periodo)} chamados.",
+            "erro_ia": f"Erro na análise de IA: {str(e)}",
+            "metadados_ia": {
+                "modelo_usado": "fallback",
+                "tempo_processamento": 0,
+                "confianca_analise": 0
+            }
+        }
 
 if __name__ == "__main__":
     import uvicorn

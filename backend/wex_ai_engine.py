@@ -3,6 +3,7 @@ Módulo de Inteligência Artificial para WEX Intelligence
 Implementa triagem automática e sugestões usando Hugging Face
 
 Baseado nas regras do documento Triagem.md
+ATUALIZADO: Agora usa configurações parametrizáveis do triagem_config.json
 """
 
 import os
@@ -13,9 +14,10 @@ from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 import requests
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+
+# Importa o gerenciador de configurações
+from config_manager import get_config_manager, get_triagem_config
 
 # Configuração de logs
 logging.basicConfig(level=logging.INFO)
@@ -25,21 +27,37 @@ logger = logging.getLogger(__name__)
 HUGGINGFACE_API_KEY = "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"
 HUGGINGFACE_API_URL = "https://api-inference.huggingface.co/models/"
 
-# Parâmetros baseados no documento Triagem.md
-SCORE_APROVACAO_AUTOMATICA = 70
-SCORE_REVISAO_HUMANA = 50
-SCORE_RECUSA_AUTOMATICA = 49
+# Funções auxiliares simples para análise de texto
+def calcular_similaridade_simples(texto1: str, texto2: str) -> float:
+    """Calcula similaridade simples entre dois textos baseada em palavras comuns"""
+    if not texto1 or not texto2:
+        return 0.0
+    
+    palavras1 = set(texto1.lower().split())
+    palavras2 = set(texto2.lower().split())
+    
+    if not palavras1 or not palavras2:
+        return 0.0
+    
+    intersecao = palavras1.intersection(palavras2)
+    uniao = palavras1.union(palavras2)
+    
+    return len(intersecao) / len(uniao) if uniao else 0.0
 
-PESO_ANEXOS = 0.30
-PESO_DESCRICAO = 0.25
-PESO_INFO_TECNICAS = 0.25
-PESO_CONTEXTO = 0.20
-
-MIN_DESCRICAO_CHARS = 50
-MAX_DESCRICAO_CHARS = 5000
-MIN_TITULO_CHARS = 10
-MAX_TITULO_CHARS = 200
-MAX_ANEXO_SIZE_MB = 50
+def encontrar_textos_similares(texto_base: str, lista_textos: List[str], limite: int = 3) -> List[Tuple[str, float]]:
+    """Encontra textos similares usando análise simples"""
+    if not texto_base or not lista_textos:
+        return []
+    
+    similaridades = []
+    for texto in lista_textos:
+        score = calcular_similaridade_simples(texto_base, texto)
+        if score > 0.1:  # Threshold mínimo
+            similaridades.append((texto, score))
+    
+    # Ordena por similaridade decrescente
+    similaridades.sort(key=lambda x: x[1], reverse=True)
+    return similaridades[:limite]
 
 @dataclass
 class TriagemResult:
@@ -94,8 +112,8 @@ class WexIntelligenceAI:
     """Classe principal para funcionalidades de IA"""
     
     def __init__(self):
-        self.vectorizer = TfidfVectorizer(max_features=1000, stop_words='english')
         self.api_key = HUGGINGFACE_API_KEY
+        self.config_manager = get_config_manager()
         
     def _chamar_huggingface_api(self, model_name: str, payload: Dict) -> Dict:
         """Chama a API da Hugging Face"""
@@ -103,7 +121,10 @@ class WexIntelligenceAI:
             headers = {"Authorization": f"Bearer {self.api_key}"}
             url = f"{HUGGINGFACE_API_URL}{model_name}"
             
-            response = requests.post(url, headers=headers, json=payload, timeout=30)
+            timeout = self.config_manager.get_configuracao_avancada('timeouts', 'timeout_ia_ms') or 3000
+            timeout_seconds = timeout / 1000.0
+            
+            response = requests.post(url, headers=headers, json=payload, timeout=timeout_seconds)
             response.raise_for_status()
             
             return response.json()
@@ -113,46 +134,57 @@ class WexIntelligenceAI:
             return {"error": str(e)}
     
     def calcular_score_anexos(self, chamado: Dict) -> int:
-        """Calcula score para anexos (0-30 pontos)"""
+        """Calcula score para anexos baseado nas configurações"""
+        config = self.config_manager.config
+        anexos_config = config.pontuacao_criterios.get('anexos', {})
+        criterios = anexos_config.get('criterios', {})
+        
         score = 0
         
         # Simular verificação de anexos
         # Em implementação real, verificaria arquivos reais
         if chamado.get('anexos_count', 0) > 0:
-            score += 20  # Anexos presentes
-            score += 5   # Formato correto (assumido)
-            score += 3   # Tamanho adequado (assumido)
-            score += 2   # Nomes descritivos (assumido)
+            score += criterios.get('todos_obrigatorios_presentes', {}).get('pontos', 20)
+            score += criterios.get('formato_correto', {}).get('pontos', 5)
+            score += criterios.get('tamanho_adequado', {}).get('pontos', 3)
+            score += criterios.get('nomes_descritivos', {}).get('pontos', 2)
         
-        return min(score, 30)
+        max_score = anexos_config.get('total_maximo', 30)
+        return min(score, max_score)
     
     def calcular_score_descricao(self, descricao: str) -> Tuple[int, List[str]]:
-        """Calcula score para descrição (0-25 pontos)"""
+        """Calcula score para descrição baseado nas configurações"""
+        config = self.config_manager.config
+        descricao_config = config.pontuacao_criterios.get('descricao', {})
+        criterios = descricao_config.get('criterios', {})
+        limites = config.limites_conteudo
+        palavras_tecnicas = config.palavras_chave.get('tecnicas', [])
+        
         score = 0
         motivos = []
         
         if not descricao:
             return 0, ["Descrição ausente"]
         
-        # Verificar tamanho
+        # Verificar tamanho baseado na configuração
+        min_chars = limites.get('min_descricao_chars', 50)
         if len(descricao) >= 100:
-            score += 15
+            score += criterios.get('clara_detalhada', {}).get('pontos', 15)
             motivos.append("Descrição detalhada")
-        elif len(descricao) >= MIN_DESCRICAO_CHARS:
-            score += 10
+        elif len(descricao) >= min_chars:
+            score += int(criterios.get('clara_detalhada', {}).get('pontos', 15) * 0.7)
             motivos.append("Descrição adequada")
         else:
             motivos.append("Descrição muito curta")
         
-        # Palavras-chave técnicas
-        palavras_tecnicas = ['erro', 'falha', 'bug', 'sistema', 'problema', 'login', 'acesso', 'performance']
+        # Palavras-chave técnicas baseadas na configuração
         if any(palavra in descricao.lower() for palavra in palavras_tecnicas):
-            score += 5
+            score += criterios.get('palavras_chave_tecnicas', {}).get('pontos', 5)
             motivos.append("Contém termos técnicos")
         
         # Estrutura organizada (pontuação, parágrafos)
         if '.' in descricao or '\n' in descricao:
-            score += 3
+            score += criterios.get('estrutura_organizada', {}).get('pontos', 3)
             motivos.append("Bem estruturada")
         
         # Verificar qualidade com IA
@@ -167,41 +199,53 @@ class WexIntelligenceAI:
         return min(score, 25), motivos
     
     def calcular_score_info_tecnicas(self, chamado: Dict) -> Tuple[int, List[str]]:
-        """Calcula score para informações técnicas (0-25 pontos)"""
+        """Calcula score para informações técnicas baseado nas configurações"""
+        config = self.config_manager.config
+        info_config = config.pontuacao_criterios.get('info_tecnicas', {})
+        criterios = info_config.get('criterios', {})
+        limites = config.limites_conteudo
+        
         score = 0
         motivos = []
         
         # Cliente identificado
         if chamado.get('cliente_solicitante'):
-            score += 10
+            score += criterios.get('cliente_identificado', {}).get('pontos', 10)
             motivos.append("Cliente identificado")
         
         # Criticidade apropriada
         if chamado.get('criticidade') in ['Baixa', 'Média', 'Alta', 'Crítica']:
-            score += 5
+            score += criterios.get('criticidade_apropriada', {}).get('pontos', 5)
             motivos.append("Criticidade definida")
         
         # Título descritivo
         titulo = chamado.get('titulo', '')
-        if MIN_TITULO_CHARS <= len(titulo) <= MAX_TITULO_CHARS:
-            score += 5
+        min_titulo = limites.get('min_titulo_chars', 10)
+        max_titulo = limites.get('max_titulo_chars', 200)
+        if min_titulo <= len(titulo) <= max_titulo:
+            score += criterios.get('titulo_descritivo', {}).get('pontos', 5)
             motivos.append("Título adequado")
         
         # Data/hora válidas
         if chamado.get('data_criacao'):
-            score += 3
+            score += criterios.get('data_hora_validas', {}).get('pontos', 3)
             motivos.append("Data válida")
         
         # Número WEX correto
         numero_wex = chamado.get('numero_wex', '')
         if re.match(r'^WEX\d{6}$', numero_wex):
-            score += 2
+            score += criterios.get('numero_wex_correto', {}).get('pontos', 2)
             motivos.append("Número WEX válido")
         
-        return min(score, 25), motivos
+        max_score = info_config.get('total_maximo', 25)
+        return min(score, max_score), motivos
     
     def calcular_score_contexto(self, descricao: str) -> Tuple[int, List[str]]:
-        """Calcula score para contexto (0-20 pontos)"""
+        """Calcula score para contexto baseado nas configurações"""
+        config = self.config_manager.config
+        contexto_config = config.pontuacao_criterios.get('contexto', {})
+        criterios = contexto_config.get('criterios', {})
+        
         score = 0
         motivos = []
         
@@ -213,56 +257,89 @@ class WexIntelligenceAI:
         # Problema claramente definido
         indicadores_problema = ['problema', 'erro', 'falha', 'não funciona', 'bug']
         if any(ind in descricao_lower for ind in indicadores_problema):
-            score += 10
+            score += criterios.get('problema_definido', {}).get('pontos', 10)
             motivos.append("Problema bem definido")
         
         # Impacto mencionado
         indicadores_impacto = ['impacto', 'afeta', 'usuários', 'crítico', 'urgente']
         if any(ind in descricao_lower for ind in indicadores_impacto):
-            score += 5
+            score += criterios.get('impacto_mencionado', {}).get('pontos', 5)
             motivos.append("Impacto mencionado")
         
         # Urgência justificada
         indicadores_urgencia = ['urgente', 'imediato', 'asap', 'prioridade']
         if any(ind in descricao_lower for ind in indicadores_urgencia):
-            score += 3
+            score += criterios.get('urgencia_justificada', {}).get('pontos', 3)
             motivos.append("Urgência identificada")
         
         # Tentativas de solução
         indicadores_tentativas = ['tentei', 'tentativa', 'já testei', 'verificado']
         if any(ind in descricao_lower for ind in indicadores_tentativas):
-            score += 2
+            score += criterios.get('tentativas_solucao', {}).get('pontos', 2)
             motivos.append("Tentativas de solução mencionadas")
         
-        return min(score, 20), motivos
+        max_score = contexto_config.get('total_maximo', 20)
+        return min(score, max_score), motivos
     
     def _analisar_qualidade_texto(self, texto: str) -> Dict:
-        """Analisa qualidade do texto usando IA"""
+        """Analisa qualidade do texto usando IA com modelos funcionais"""
         try:
-            payload = {
-                "inputs": f"Analise a qualidade deste texto de suporte técnico: {texto[:500]}",
-                "parameters": {"max_length": 50}
-            }
+            # Usar modelo de análise de sentimento que funciona
+            config = self.config_manager.config
+            modelo_sentimento = config.configuracoes_avancadas.get('modelos_ia', {}).get(
+                'modelo_sentimento', 'cardiffnlp/twitter-roberta-base-sentiment-latest'
+            )
             
-            resultado = self._chamar_huggingface_api("microsoft/DialoGPT-medium", payload)
+            payload = {"inputs": texto[:500]}  # Limitar texto para análise
             
-            # Simular score baseado na resposta
-            score = 0.8 if len(texto) > 100 else 0.5
+            resultado = self._chamar_huggingface_api(modelo_sentimento, payload)
+            
+            # Analisar resultado para calcular score
+            score = 0.5  # Base
+            
+            if isinstance(resultado, list) and len(resultado) > 0:
+                if isinstance(resultado[0], list) and len(resultado[0]) > 0:
+                    sentimentos = resultado[0]
+                    
+                    # Procurar por sentimento positivo/neutro (indica texto bem estruturado)
+                    for sent in sentimentos:
+                        if isinstance(sent, dict):
+                            label = sent.get('label', '').lower()
+                            score_sent = sent.get('score', 0)
+                            
+                            if 'positive' in label or 'neutral' in label:
+                                score = min(0.9, 0.5 + (score_sent * 0.4))
+                                break
+                            elif '4 star' in label or '5 star' in label:
+                                score = min(0.9, 0.5 + (score_sent * 0.4))
+                                break
+            
+            # Ajustar score baseado no comprimento do texto
+            if len(texto) > 100:
+                score += 0.1
+            if len(texto) > 200:
+                score += 0.1
+            
+            score = min(1.0, score)
             
             return {"score": score, "analise": resultado}
             
         except Exception as e:
             logger.warning(f"Erro na análise de qualidade: {e}")
-            return {"score": 0.5, "analise": "Análise indisponível"}
+            # Fallback baseado em heurísticas simples
+            score = 0.7 if len(texto) > 100 else 0.5
+            return {"score": score, "analise": "Análise local - modelo remoto indisponível"}
     
     def _sugerir_criticidade(self, chamado: Dict, score_total: int) -> str:
-        """Sugere criticidade baseada na análise"""
+        """Sugere criticidade baseada na análise e configurações"""
+        config = self.config_manager.config
         descricao = chamado.get('descricao', '').lower()
         
-        # Palavras que indicam alta criticidade
-        palavras_criticas = ['crítico', 'urgente', 'parado', 'indisponível', 'falha total']
-        palavras_altas = ['problema', 'erro', 'falha', 'não funciona']
-        palavras_medias = ['lento', 'dificuldade', 'dúvida']
+        # Usar palavras-chave configuradas
+        palavras_criticas = config.palavras_chave.get('criticidade_critica', [])
+        palavras_altas = config.palavras_chave.get('criticidade_alta', [])
+        palavras_medias = config.palavras_chave.get('criticidade_media', [])
+        palavras_baixas = config.palavras_chave.get('criticidade_baixa', [])
         
         if any(palavra in descricao for palavra in palavras_criticas):
             return 'Crítica'
@@ -270,8 +347,16 @@ class WexIntelligenceAI:
             return 'Alta'
         elif any(palavra in descricao for palavra in palavras_medias):
             return 'Média'
-        else:
+        elif any(palavra in descricao for palavra in palavras_baixas):
             return 'Baixa'
+        else:
+            # Decisão baseada no score se não houver palavras-chave específicas
+            if score_total >= 80:
+                return 'Alta'
+            elif score_total >= 60:
+                return 'Média'
+            else:
+                return 'Baixa'
     
     def _gerar_tags_sugeridas(self, chamado: Dict) -> List[str]:
         """Gera tags baseadas no conteúdo"""
@@ -307,24 +392,36 @@ class WexIntelligenceAI:
         inicio = datetime.now()
         
         try:
+            config = self.config_manager.config
+            
             # Calcular scores individuais
             score_anexos = self.calcular_score_anexos(chamado)
             score_descricao, motivos_desc = self.calcular_score_descricao(chamado.get('descricao', ''))
             score_info, motivos_info = self.calcular_score_info_tecnicas(chamado)
             score_contexto, motivos_ctx = self.calcular_score_contexto(chamado.get('descricao', ''))
             
-            # Score total ponderado
+            # Score total ponderado baseado nas configurações
+            pesos = config.pesos_categorias
+            
+            # Obter máximos por categoria do config
+            max_anexos = config.pontuacao_criterios.get('anexos', {}).get('total_maximo', 30)
+            max_descricao = config.pontuacao_criterios.get('descricao', {}).get('total_maximo', 25)
+            max_info = config.pontuacao_criterios.get('info_tecnicas', {}).get('total_maximo', 25)
+            max_contexto = config.pontuacao_criterios.get('contexto', {}).get('total_maximo', 20)
+            
+            # Aplicar fórmula correta: normalizar por categoria e aplicar pesos
             score_total = int(
-                score_anexos * PESO_ANEXOS +
-                score_descricao * PESO_DESCRICAO +
-                score_info * PESO_INFO_TECNICAS +
-                score_contexto * PESO_CONTEXTO
+                (score_anexos / max_anexos) * (pesos.get('anexos', 0.30) * 100) +
+                (score_descricao / max_descricao) * (pesos.get('descricao', 0.25) * 100) +
+                (score_info / max_info) * (pesos.get('info_tecnicas', 0.25) * 100) +
+                (score_contexto / max_contexto) * (pesos.get('contexto', 0.20) * 100)
             )
             
-            # Determinar decisão
-            if score_total >= SCORE_APROVACAO_AUTOMATICA:
+            # Determinar decisão baseada nos thresholds configurados
+            thresholds = config.thresholds
+            if score_total >= thresholds.get('aprovacao_automatica', 70):
                 decisao = "aprovado"
-            elif score_total >= SCORE_REVISAO_HUMANA:
+            elif score_total >= thresholds.get('revisao_humana', 50):
                 decisao = "revisao"
             else:
                 decisao = "recusado"
@@ -405,47 +502,79 @@ class WexIntelligenceAI:
             status = chamado.get('status', '')
             criticidade = chamado.get('criticidade', '')
             
-            # Usar IA para gerar sugestões contextuais
-            prompt = f"""
-            Baseado neste chamado de suporte:
-            Status: {status}
-            Criticidade: {criticidade}
-            Descrição: {descricao[:300]}
+            # Usar IA para análise de contexto (usando modelo funcional)
+            config = self.config_manager.config
+            modelo_classificacao = config.configuracoes_avancadas.get('modelos_ia', {}).get(
+                'modelo_classificacao', 'nlptown/bert-base-multilingual-uncased-sentiment'
+            )
             
-            Sugira 3 próximas ações apropriadas.
-            """
+            # Analisar o contexto do chamado
+            payload = {"inputs": f"{status} {criticidade} {descricao[:300]}"}
             
-            payload = {
-                "inputs": prompt,
-                "parameters": {
-                    "max_length": 200,
-                    "temperature": 0.7,
-                    "do_sample": True
-                }
-            }
+            try:
+                resultado_ia = self._chamar_huggingface_api(modelo_classificacao, payload)
+                
+                # Interpretar resultado para gerar sugestões contextuais
+                urgencia_detectada = False
+                qualidade_detectada = False
+                
+                if isinstance(resultado_ia, list) and len(resultado_ia) > 0:
+                    if isinstance(resultado_ia[0], list):
+                        for item in resultado_ia[0]:
+                            if isinstance(item, dict):
+                                label = item.get('label', '').lower()
+                                score = item.get('score', 0)
+                                
+                                if ('5 star' in label or '4 star' in label) and score > 0.5:
+                                    qualidade_detectada = True
+                                elif ('1 star' in label or '2 star' in label) and score > 0.5:
+                                    urgencia_detectada = True
+                
+            except Exception as e:
+                logger.warning(f"Erro na análise contextual: {e}")
+                urgencia_detectada = False
+                qualidade_detectada = False
             
-            resultado_ia = self._chamar_huggingface_api("microsoft/DialoGPT-medium", payload)
-            
-            # Sugestões baseadas em regras + IA
+            # Sugestões baseadas em regras + análise de IA
             sugestoes = []
             
             if status == "Aberto":
-                sugestoes.append(SugestaoFollowup(
-                    titulo="Análise Inicial",
-                    descricao="Realizar análise técnica inicial do problema reportado",
-                    tipo="Análise",
-                    confianca=0.9,
-                    motivo="Status inicial requer investigação",
-                    exemplos_similares=[]
-                ))
+                if urgencia_detectada:
+                    sugestoes.append(SugestaoFollowup(
+                        titulo="Priorização Urgente",
+                        descricao="Problema detectado como crítico, requer atenção imediata",
+                        tipo="Urgente",
+                        confianca=0.9,
+                        motivo="IA detectou indicadores de alta criticidade",
+                        exemplos_similares=[]
+                    ))
+                else:
+                    sugestoes.append(SugestaoFollowup(
+                        titulo="Análise Inicial",
+                        descricao="Realizar análise técnica inicial do problema reportado",
+                        tipo="Análise",
+                        confianca=0.8,
+                        motivo="Status inicial requer investigação",
+                        exemplos_similares=[]
+                    ))
             elif status == "Em análise":
-                sugestoes.append(SugestaoFollowup(
-                    titulo="Teste de Reprodução",
-                    descricao="Tentar reproduzir o problema em ambiente de teste",
-                    tipo="Teste",
-                    confianca=0.8,
-                    motivo="Análise em andamento necessita validação",
-                    exemplos_similares=[]
+                if qualidade_detectada:
+                    sugestoes.append(SugestaoFollowup(
+                        titulo="Solução Direcionada",
+                        descricao="Chamado bem estruturado, implementar solução baseada na análise",
+                        tipo="Solução",
+                        confianca=0.9,
+                        motivo="IA detectou alta qualidade na descrição",
+                        exemplos_similares=[]
+                    ))
+                else:
+                    sugestoes.append(SugestaoFollowup(
+                        titulo="Teste de Reprodução",
+                        descricao="Tentar reproduzir o problema em ambiente de teste",
+                        tipo="Teste",
+                        confianca=0.7,
+                        motivo="Análise em andamento necessita validação",
+                        exemplos_similares=[]
                 ))
             
             if criticidade in ["Alta", "Crítica"]:
@@ -459,7 +588,14 @@ class WexIntelligenceAI:
                 ))
             
             # Adicionar sugestão baseada na IA (se disponível)
-            if not resultado_ia.get('error'):
+            ia_funcionou = False
+            try:
+                if isinstance(resultado_ia, list) or (isinstance(resultado_ia, dict) and 'error' not in resultado_ia):
+                    ia_funcionou = True
+            except:
+                ia_funcionou = False
+            
+            if ia_funcionou:
                 sugestoes.append(SugestaoFollowup(
                     titulo="Sugestão da IA",
                     descricao="Baseado na análise do conteúdo, considere verificar logs do sistema",
@@ -521,13 +657,13 @@ class WexIntelligenceAI:
                     confianca_analise=0.0
                 )
             
-            # Calcular similaridade usando TF-IDF
-            matriz_tfidf = self.vectorizer.fit_transform(textos)
-            similaridades = cosine_similarity(matriz_tfidf[0:1], matriz_tfidf[1:]).flatten()
+            # Calcular similaridade usando análise simples
+            resultados_similaridade = encontrar_textos_similares(desc_principal, 
+                [f"{c.titulo if hasattr(c, 'titulo') else ''} {c.descricao if hasattr(c, 'descricao') else str(c)}" for c in chamados_validos])
             
             # Criar lista de resultados com scores
             resultados = []
-            for i, score in enumerate(similaridades):
+            for i, (texto_similar, score) in enumerate(resultados_similaridade):
                 if score >= score_minimo:
                     chamado = chamados_validos[i]
                     
@@ -568,7 +704,7 @@ class WexIntelligenceAI:
             if len(resultados_limitados) > 0:
                 scores_altos = [r for r in resultados_limitados if r['score_similaridade'] > 0.7]
                 if len(scores_altos) > 1:
-                    padrões.append("Chamados praticamente idênticos identificados")
+                    padroes.append("Chamados praticamente idênticos identificados")
             
             tempo_processamento = (datetime.now() - tempo_inicio).total_seconds()
             confianca = np.mean([r['score_similaridade'] for r in resultados_limitados]) if resultados_limitados else 0.0
@@ -636,10 +772,7 @@ class WexIntelligenceAI:
                     confianca_analise=0.1
                 )
             
-            # Análise de clustering usando TF-IDF
-            matriz_tfidf = self.vectorizer.fit_transform(textos)
-            similaridades = cosine_similarity(matriz_tfidf)
-            
+            # Análise de clustering usando similaridade simples
             # Identificar grupos similares
             grupos_similares = []
             chamados_processados = set()
@@ -653,16 +786,28 @@ class WexIntelligenceAI:
                 indices_grupo = [i]
                 chamados_processados.add(i)
                 
+                desc_base = textos[i]
+                
                 for j in range(i + 1, len(chamados_validos)):
-                    if j not in chamados_processados and similaridades[i][j] > threshold:
-                        grupo_atual.append(chamados_validos[j])
-                        indices_grupo.append(j)
-                        chamados_processados.add(j)
+                    if j not in chamados_processados:
+                        similaridade = calcular_similaridade_simples(desc_base, textos[j])
+                        if similaridade > threshold:
+                            grupo_atual.append(chamados_validos[j])
+                            indices_grupo.append(j)
+                            chamados_processados.add(j)
                 
                 if len(grupo_atual) > 1:
+                    # Calcular similaridade média do grupo
+                    similaridades_grupo = []
+                    for idx in indices_grupo[1:]:
+                        sim = calcular_similaridade_simples(textos[indices_grupo[0]], textos[idx])
+                        similaridades_grupo.append(sim)
+                    
+                    similaridade_media = sum(similaridades_grupo) / len(similaridades_grupo) if similaridades_grupo else 0.0
+                    
                     grupo_info = {
                         'tamanho': len(grupo_atual),
-                        'similaridade_media': float(np.mean([similaridades[indices_grupo[0]][j] for j in indices_grupo[1:]])),
+                        'similaridade_media': similaridade_media,
                         'chamados': [
                             {
                                 'id': c.id if hasattr(c, 'id') else 0,

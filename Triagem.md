@@ -19,12 +19,7 @@ Este documento define as regras e parâmetros para a triagem automática de cham
 
 ## ⚙️ Regras de Triagem Inicial
 
-### **1. Triagem Inicial Automatizada**
-
-A IA realizará triagem automática de:
-- ✅ **Chamados existentes** no sistema
-- ✅ **Novos chamados** que forem criados
-- ✅ **Chamados importados** de sistemas externos
+### **1. Triagem Inicial**
 
 #### **Critérios de Validação:**
 

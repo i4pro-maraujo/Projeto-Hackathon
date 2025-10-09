@@ -1,0 +1,165 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "created": "2025-10-09",
+    "updated": "2025-10-09",
+    "description": "Configurações de pontuação da triagem automática WEX Intelligence",
+    "author": "Sistema WEX Intelligence IA",
+    "schema_version": "1.0"
+  },
+  "thresholds": {
+    "aprovacao_automatica": 70,
+    "revisao_humana": 50,
+    "recusa_automatica": 49
+  },
+  "pesos_categorias": {
+    "anexos": 0.30,
+    "descricao": 0.25,
+    "info_tecnicas": 0.25,
+    "contexto": 0.20
+  },
+  "pontuacao_criterios": {
+    "anexos": {
+      "total_maximo": 30,
+      "criterios": {
+        "todos_obrigatorios_presentes": {
+          "pontos": 20,
+          "descricao": "Todos anexos obrigatórios devem estar presentes"
+        },
+        "formato_correto": {
+          "pontos": 5,
+          "descricao": "Anexos em formato aceito (.pdf, .doc, .docx, .xls, .xlsx, .png, .jpg)"
+        },
+        "tamanho_adequado": {
+          "pontos": 3,
+          "descricao": "Anexos entre 1KB e tamanho máximo permitido"
+        },
+        "nomes_descritivos": {
+          "pontos": 2,
+          "descricao": "Nomes de arquivo claros e descritivos"
+        }
+      }
+    },
+    "descricao": {
+      "total_maximo": 25,
+      "criterios": {
+        "clara_detalhada": {
+          "pontos": 15,
+          "descricao": "Descrição clara e detalhada (>100 caracteres)"
+        },
+        "palavras_chave_tecnicas": {
+          "pontos": 5,
+          "descricao": "Uso de palavras-chave técnicas relevantes"
+        },
+        "estrutura_organizada": {
+          "pontos": 3,
+          "descricao": "Texto bem estruturado e organizado"
+        },
+        "ausencia_erros": {
+          "pontos": 2,
+          "descricao": "Ausência de erros graves de digitação ou gramática"
+        }
+      }
+    },
+    "info_tecnicas": {
+      "total_maximo": 25,
+      "criterios": {
+        "cliente_identificado": {
+          "pontos": 10,
+          "descricao": "Cliente claramente identificado"
+        },
+        "criticidade_apropriada": {
+          "pontos": 5,
+          "descricao": "Nível de criticidade apropriado ao problema"
+        },
+        "titulo_descritivo": {
+          "pontos": 5,
+          "descricao": "Título claro e descritivo do problema"
+        },
+        "data_hora_validas": {
+          "pontos": 3,
+          "descricao": "Data e hora válidas e consistentes"
+        },
+        "numero_wex_correto": {
+          "pontos": 2,
+          "descricao": "Número WEX no formato correto"
+        }
+      }
+    },
+    "contexto": {
+      "total_maximo": 20,
+      "criterios": {
+        "problema_definido": {
+          "pontos": 10,
+          "descricao": "Problema claramente definido e explicado"
+        },
+        "impacto_mencionado": {
+          "pontos": 5,
+          "descricao": "Impacto do problema claramente mencionado"
+        },
+        "urgencia_justificada": {
+          "pontos": 3,
+          "descricao": "Urgência bem justificada"
+        },
+        "tentativas_solucao": {
+          "pontos": 2,
+          "descricao": "Tentativas de solução já realizadas mencionadas"
+        }
+      }
+    }
+  },
+  "limites_conteudo": {
+    "min_descricao_chars": 50,
+    "max_descricao_chars": 5000,
+    "min_titulo_chars": 10,
+    "max_titulo_chars": 200,
+    "max_anexo_size_mb": 50
+  },
+  "palavras_chave": {
+    "criticidade_critica": [
+      "sistema parado", "falha crítica", "produção parada", "usuários sem acesso", 
+      "erro crítico", "sistema indisponível", "falha total", "emergência"
+    ],
+    "criticidade_alta": [
+      "erro grave", "sistema lento", "falha parcial", "problema urgente",
+      "impacto significativo", "muitos usuários afetados"
+    ],
+    "criticidade_media": [
+      "erro menor", "problema intermitente", "funcionalidade limitada",
+      "alguns usuários afetados", "problema recorrente"
+    ],
+    "criticidade_baixa": [
+      "dúvida", "melhoria", "sugestão", "problema menor", "consulta"
+    ],
+    "tecnicas": [
+      "erro 500", "timeout", "conexão", "banco de dados", "api", "servidor",
+      "performance", "lentidão", "sql", "javascript", "html", "css"
+    ]
+  },
+  "formatos_anexos_aceitos": [
+    ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png", ".jpg", ".jpeg",
+    ".zip", ".rar", ".txt", ".log"
+  ],
+  "configuracoes_avancadas": {
+    "deteccao_similaridade": {
+      "threshold_similaridade": 0.70,
+      "max_chamados_similares": 5,
+      "peso_titulo": 0.4,
+      "peso_descricao": 0.6
+    },
+    "analise_confianca": {
+      "min_confianca_aprovacao": 0.80,
+      "penalidade_baixa_confianca": 0.10
+    },
+    "timeouts": {
+      "max_tempo_triagem_ms": 5000,
+      "timeout_ia_ms": 3000
+    },
+    "modelos_ia": {
+      "modelo_sentimento": "cardiffnlp/twitter-roberta-base-sentiment-latest",
+      "modelo_classificacao": "nlptown/bert-base-multilingual-uncased-sentiment",
+      "modelo_fallback": "microsoft/DialoGPT-medium",
+      "usar_fallback_local": true
+    }
+  }
+}

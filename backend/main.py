@@ -19,8 +19,9 @@ from sqlalchemy import func, or_, and_
 import os
 from collections import Counter
 import math
-# Importar nossa IA
+# Importar nossa IA e configurações
 from wex_ai_engine import wex_ai
+from config_manager import get_config_manager
 
 # Configurar logging
 logger = logging.getLogger(__name__)
@@ -364,37 +365,45 @@ def extrair_indicadores_criticidade(descricao: str, numero_wex: str, cliente: st
     }
 
 def calcular_score_qualidade(descricao: str, numero_wex: str, cliente: str) -> int:
-    """Calcula score de qualidade do chamado (0-100)"""
-    score = 50  # Base
-    
-    # Critérios de qualidade
-    if len(descricao) > 50:
-        score += 15  # Descrição detalhada
-    
-    if len(descricao) > 200:
-        score += 10  # Descrição muito detalhada
-    
-    # Informações estruturadas
-    if re.search(r'passos|steps|procedimento|reproduz', descricao.lower()):
-        score += 15  # Passos para reproduzir
-    
-    if re.search(r'erro|error|mensagem', descricao.lower()):
-        score += 10  # Mensagem de erro mencionada
-    
-    if re.search(r'ambiente|versão|browser|sistema', descricao.lower()):
-        score += 10  # Informações de ambiente
-    
-    if re.search(r'anexo|print|imagem|log', descricao.lower()):
-        score += 10  # Indica anexos/evidências
-    
-    # Penalizações
-    if len(descricao) < 20:
-        score -= 25  # Descrição muito curta
-    
-    if descricao.lower().count('não funciona') > 0 and len(descricao) < 50:
-        score -= 15  # Descrição genérica
-    
-    return max(0, min(100, score))
+    """Calcula score de qualidade do chamado usando configurações parametrizáveis"""
+    # DEPRECADO: Esta função agora é redundante, pois a IA calcula o score diretamente
+    # Mantida para compatibilidade, mas delega para a IA
+    try:
+        config_manager = get_config_manager()
+        
+        # Simular um chamado básico para a IA calcular
+        chamado_mock = {
+            'descricao': descricao,
+            'numero_wex': numero_wex,
+            'cliente_solicitante': cliente,
+            'titulo': 'Chamado simulado para cálculo de score',
+            'anexos_count': 0,
+            'criticidade': 'Média'
+        }
+        
+        resultado = wex_ai.realizar_triagem(chamado_mock)
+        return resultado.score_total
+        
+    except Exception as e:
+        logger.warning(f"Erro ao calcular score via IA, usando fallback: {e}")
+        # Fallback simplificado usando configurações básicas
+        score = 50  # Base
+        
+        config_manager = get_config_manager()
+        min_chars = config_manager.get_limite_conteudo('min_descricao_chars')
+        
+        if len(descricao) > min_chars:
+            score += 15
+        if len(descricao) > 200:
+            score += 10
+        if re.search(r'passos|steps|procedimento|reproduz', descricao.lower()):
+            score += 15
+        if re.search(r'erro|error|mensagem', descricao.lower()):
+            score += 10
+        if len(descricao) < 20:
+            score -= 25
+        
+        return max(0, min(100, score))
 
 def sugerir_tags_automaticas(descricao: str, numero_wex: str, cliente: str) -> List[str]:
     """Sugere tags automáticas baseadas no conteúdo"""
@@ -456,8 +465,10 @@ async def triagem_automatica_nova(request: dict):
         # Executar triagem com IA real
         resultado_triagem = wex_ai.realizar_triagem(chamado_dict)
         
-        # Determinar se deve ser aceito (score > 50 baseado no documento Triagem.md)
-        aceito = resultado_triagem.score_total > 50
+        # Determinar se deve ser aceito baseado nos thresholds configurados
+        config_manager = get_config_manager()
+        threshold_revisao = config_manager.get_threshold('revisao_humana')
+        aceito = resultado_triagem.score_total >= threshold_revisao
         decisao = "aceito" if aceito else "recusado"
         
         return {
@@ -532,7 +543,7 @@ async def triagem_automatica(chamado_id: int, db: Session = Depends(get_db)):
             'criticidade': chamado.criticidade.value if hasattr(chamado.criticidade, 'value') else str(chamado.criticidade),
             'status': chamado.status.value if hasattr(chamado.status, 'value') else str(chamado.status),
             'data_criacao': chamado.data_criacao.isoformat() if chamado.data_criacao else None,
-            'anexos_count': 0  # Simular contagem de anexos
+            'anexos_count': 1 if chamado.possui_anexos else 0  # Usar valor real do banco
         }
         
         # Executar triagem com IA real

@@ -4175,20 +4175,36 @@
             chamadoIdSelecionadoTriagem = chamadoId;
             
             try {
+                // Mostrar loading
+                mostrarToast('info', 'Processando', 'Executando triagem automática...');
+                
                 const response = await fetch(`${API_BASE}/api/chamados/${chamadoId}/triagem`, {
                     method: 'POST'
                 });
                 
                 if (!response.ok) {
-                    throw new Error('Erro na triagem automática');
+                    const errorText = await response.text();
+                    throw new Error(`Erro na triagem automática: ${response.status} - ${errorText}`);
                 }
                 
                 const resultado = await response.json();
+                
+                // Log para debug
+                console.log('🤖 Resposta da API de triagem:', resultado);
+                
+                if (!resultado) {
+                    throw new Error('Resposta vazia da API de triagem');
+                }
+                
                 exibirResultadoTriagem(resultado);
+                mostrarToast('success', 'Sucesso', 'Triagem automática executada com sucesso!');
                 
             } catch (error) {
                 console.error('Erro na triagem:', error);
-                mostrarToast('error', 'Erro', 'Erro ao executar triagem automática');
+                mostrarToast('error', 'Erro', `Erro ao executar triagem automática: ${error.message}`);
+                
+                // Limpar resultado anterior em caso de erro
+                document.getElementById('resultadoTriagem').classList.add('hidden');
             }
         }
 
@@ -4196,43 +4212,68 @@
             document.getElementById('resultadoTriagem').classList.remove('hidden');
             
             // Atualizar informações básicas
-            document.getElementById('criticidadeAtual').textContent = resultado.criticidade_atual;
-            document.getElementById('criticidadeAtual').className = `badge badge-ia ${resultado.criticidade_atual.toLowerCase()}`;
+            document.getElementById('criticidadeAtual').textContent = resultado.criticidade_atual || 'N/A';
+            document.getElementById('criticidadeAtual').className = `badge badge-ia ${(resultado.criticidade_atual || 'media').toLowerCase()}`;
             
-            document.getElementById('criticidadeSugerida').textContent = resultado.criticidade_sugerida;
-            document.getElementById('criticidadeSugerida').className = `badge badge-ia ${resultado.criticidade_sugerida.toLowerCase()}`;
+            document.getElementById('criticidadeSugerida').textContent = resultado.criticidade_sugerida || 'N/A';
+            document.getElementById('criticidadeSugerida').className = `badge badge-ia ${(resultado.criticidade_sugerida || 'media').toLowerCase()}`;
             
-            document.getElementById('confiancaTriagem').textContent = `${(resultado.confianca * 100).toFixed(1)}%`;
-            document.getElementById('scoreQualidade').textContent = `${resultado.score_qualidade_sugerido}/100`;
+            document.getElementById('confiancaTriagem').textContent = `${((resultado.confianca || 0) * 100).toFixed(1)}%`;
+            document.getElementById('scoreQualidade').textContent = `${resultado.score_qualidade_sugerido || resultado.score_total || 0}/100`;
             
-            // Fatores identificados
+            // Fatores identificados - usando o campo correto da API
             const fatoresContainer = document.getElementById('fatoresLista');
             fatoresContainer.innerHTML = '';
-            resultado.fatores_identificados.forEach(fator => {
-                const div = document.createElement('div');
-                div.className = 'fator-item';
-                div.textContent = fator;
-                fatoresContainer.appendChild(div);
-            });
+            const fatores = resultado.fatores_identificados || resultado.motivos || [];
+            if (fatores.length > 0) {
+                fatores.forEach(fator => {
+                    const div = document.createElement('div');
+                    div.className = 'fator-item';
+                    div.textContent = fator;
+                    fatoresContainer.appendChild(div);
+                });
+            } else {
+                fatoresContainer.innerHTML = '<div class="fator-item">Nenhum fator específico identificado</div>';
+            }
             
-            // Sugestões de melhoria
+            // Sugestões de melhoria - usando o campo correto da API
             const sugestoesContainer = document.getElementById('sugestoesLista');
             sugestoesContainer.innerHTML = '';
-            resultado.sugestoes_adicao.forEach(sugestao => {
-                const div = document.createElement('div');
-                div.className = 'sugestao-item';
-                div.textContent = sugestao;
-                sugestoesContainer.appendChild(div);
-            });
+            const sugestoes = resultado.sugestoes_melhoria || resultado.sugestoes || [];
+            if (sugestoes.length > 0) {
+                sugestoes.forEach(sugestao => {
+                    const div = document.createElement('div');
+                    div.className = 'sugestao-item';
+                    div.textContent = sugestao;
+                    sugestoesContainer.appendChild(div);
+                });
+            } else {
+                sugestoesContainer.innerHTML = '<div class="sugestao-item">Nenhuma sugestão específica de melhoria</div>';
+            }
             
-            // Tags sugeridas
+            // Tags sugeridas - usando o campo correto da API
             const tagsContainer = document.getElementById('tagsLista');
             tagsContainer.innerHTML = '';
-            resultado.tags_sugeridas.forEach(tag => {
-                const span = document.createElement('span');
-                span.className = 'tag-item badge badge-secondary';
-                span.textContent = tag;
-                tagsContainer.appendChild(span);
+            const tags = resultado.tags_sugeridas || [];
+            if (tags.length > 0) {
+                tags.forEach(tag => {
+                    const span = document.createElement('span');
+                    span.className = 'tag-item badge badge-secondary';
+                    span.textContent = tag;
+                    span.style.margin = '2px';
+                    span.style.display = 'inline-block';
+                    tagsContainer.appendChild(span);
+                });
+            } else {
+                tagsContainer.innerHTML = '<span class="tag-item badge badge-light">Nenhuma tag sugerida</span>';
+            }
+            
+            // Log para debug
+            console.log('📊 Resultado da triagem processado:', {
+                fatores: fatores.length,
+                sugestoes: sugestoes.length,
+                tags: tags.length,
+                resultado: resultado
             });
         }
 
@@ -4585,7 +4626,7 @@
             carregarDashboard();
             carregarDashboardAvancado();
             carregarChamados();
-        }, 30000);
+        }, 30000000);
     </script>
 
     <!-- Modal para detalhes do chamado -->

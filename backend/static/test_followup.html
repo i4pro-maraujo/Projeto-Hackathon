@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Modal Follow-up</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .test-button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background-color: #1976D2;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #E8F5E8;
+            border: 1px solid #4CAF50;
+            color: #2E7D32;
+        }
+        .error {
+            background-color: #FFEBEE;
+            border: 1px solid #F44336;
+            color: #C62828;
+        }
+        .info {
+            background-color: #E3F2FD;
+            border: 1px solid #2196F3;
+            color: #1565C0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste da Funcionalidade Follow-up</h1>
+        
+        <div class="test-section">
+            <h2>1. Teste de Conexão com API</h2>
+            <button class="test-button" onclick="testApiConnection()">Testar Conexão</button>
+            <div id="apiResult" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>2. Teste de Busca de Chamados</h2>
+            <button class="test-button" onclick="testGetChamados()">Buscar Chamados</button>
+            <div id="chamadosResult" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>3. Teste de Criação de Follow-up</h2>
+            <button class="test-button" onclick="testCreateFollowup()">Criar Follow-up</button>
+            <div id="followupResult" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>4. Teste do Modal (Simulação)</h2>
+            <button class="test-button" onclick="testModal()">Abrir Modal de Teste</button>
+            <div id="modalResult" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>5. Teste de Templates</h2>
+            <select id="templateSelect" onchange="testTemplate()">
+                <option value="">Selecione um template</option>
+                <option value="Publicação">Publicação</option>
+                <option value="Desenvolvimento">Desenvolvimento</option>
+                <option value="Análise">Análise</option>
+                <option value="Outros">Outros</option>
+            </select>
+            <div id="templateResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        // Função para exibir resultados
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.innerHTML = message;
+        }
+        
+        // Teste 1: Conexão com API
+        async function testApiConnection() {
+            try {
+                const response = await fetch(`${API_BASE}/docs`);
+                if (response.ok) {
+                    showResult('apiResult', '✅ API está respondendo corretamente!', 'success');
+                } else {
+                    showResult('apiResult', `❌ API retornou status: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showResult('apiResult', `❌ Erro de conexão: ${error.message}`, 'error');
+            }
+        }
+        
+        // Teste 2: Busca de chamados
+        async function testGetChamados() {
+            try {
+                const response = await fetch(`${API_BASE}/chamados`);
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult('chamadosResult', 
+                        `✅ Encontrados ${data.total} chamados. Primeiro: ${data.chamados[0]?.numero_wex || 'N/A'}`, 
+                        'success');
+                } else {
+                    showResult('chamadosResult', `❌ Erro ao buscar chamados: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showResult('chamadosResult', `❌ Erro: ${error.message}`, 'error');
+            }
+        }
+        
+        // Teste 3: Criação de follow-up
+        async function testCreateFollowup() {
+            const chamadoId = 1;
+            const followupData = {
+                tipo: "Outros",
+                descricao: "Follow-up de teste criado pelo frontend de teste",
+                autor: "Sistema de Teste Frontend"
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/chamados/${chamadoId}/followups`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(followupData)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showResult('followupResult', 
+                        `✅ Follow-up criado com ID: ${result.id}. Tipo: ${result.tipo}`, 
+                        'success');
+                } else {
+                    const error = await response.text();
+                    showResult('followupResult', `❌ Erro ao criar follow-up: ${error}`, 'error');
+                }
+            } catch (error) {
+                showResult('followupResult', `❌ Erro: ${error.message}`, 'error');
+            }
+        }
+        
+        // Teste 4: Modal (simulação)
+        function testModal() {
+            // Simula a abertura do modal
+            const modalHtml = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+                    <div style="background: white; padding: 20px; border-radius: 8px; max-width: 500px; width: 90%;">
+                        <h3>Modal de Follow-up (Teste)</h3>
+                        <p>Este modal seria aberto ao clicar no botão "Adicionar Follow-up"</p>
+                        <button onclick="this.parentElement.parentElement.remove()">Fechar</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            showResult('modalResult', '✅ Modal simulado aberto! Clique para fechar.', 'success');
+        }
+        
+        // Teste 5: Templates
+        function testTemplate() {
+            const select = document.getElementById('templateSelect');
+            const tipo = select.value;
+            
+            if (!tipo) {
+                showResult('templateResult', 'Selecione um tipo de template', 'info');
+                return;
+            }
+            
+            const templates = {
+                'Publicação': 'Informamos que foi publicada uma nova versão do sistema...',
+                'Desenvolvimento': 'Iniciamos o desenvolvimento da correção solicitada...',
+                'Análise': 'Realizamos análise detalhada do problema reportado...',
+                'Outros': 'Seguem informações adicionais sobre o chamado...'
+            };
+            
+            const template = templates[tipo];
+            showResult('templateResult', 
+                `✅ Template para "${tipo}": <br><em>"${template}"</em>`, 
+                'success');
+        }
+        
+        // Executa teste inicial ao carregar a página
+        window.onload = function() {
+            showResult('apiResult', 'Clique no botão para testar a conexão', 'info');
+            showResult('chamadosResult', 'Clique no botão para buscar chamados', 'info');
+            showResult('followupResult', 'Clique no botão para criar um follow-up', 'info');
+            showResult('modalResult', 'Clique no botão para simular o modal', 'info');
+            showResult('templateResult', 'Selecione um tipo de template', 'info');
+        };
+    </script>
+</body>
+</html>

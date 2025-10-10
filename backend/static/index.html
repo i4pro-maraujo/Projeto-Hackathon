@@ -1753,6 +1753,193 @@
             }
         }
         
+        
+        /* Estilos para Modal de Follow-up */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(2px);
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .modal-close {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.8);
+            transition: color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: white;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
+
+        .btn-template {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: transform 0.2s ease;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-template:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
+        }
+
+        .form-group small {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Responsividade do modal */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                margin: 1rem;
+            }
+            
+            .modal-body {
+                padding: 1rem;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .form-actions button {
+                width: 100%;
+            }
+        }
+        
         /* Reduced Motion */
         @media (prefers-reduced-motion: reduce) {
             *,
@@ -2638,8 +2825,275 @@
             mostrarToast('info', 'Funcionalidade em Desenvolvimento', `Editar chamado ${id} será implementado no Dia 3.`);
         }
         
-        function adicionarFollowup(id) {
-            mostrarToast('info', 'Funcionalidade em Desenvolvimento', `Adicionar follow-up ao chamado ${id} será implementado no Dia 3.`);
+        function adicionarFollowup(chamadoId) {
+            mostrarModalFollowup(chamadoId);
+        }
+
+        function mostrarModalFollowup(chamadoId) {
+            const modal = `
+                <div id="modalFollowup" class="modal-overlay" onclick="fecharModalFollowup(event)">
+                    <div class="modal-content" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <h3>🎯 Adicionar Follow-up</h3>
+                            <span class="modal-close" onclick="fecharModalFollowup()">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <form id="formFollowup" onsubmit="enviarFollowup(event, ${chamadoId})">
+                                <div class="form-group">
+                                    <label for="tipoFollowup">Tipo de Follow-up:</label>
+                                    <select id="tipoFollowup" name="tipo" onchange="atualizarTemplateTexto()" required>
+                                        <option value="">Selecione o tipo...</option>
+                                        <option value="Publicação">📢 Publicação</option>
+                                        <option value="Desenvolvimento">💻 Desenvolvimento</option>
+                                        <option value="Análise">🔍 Análise</option>
+                                        <option value="Outros">📝 Outros</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="autorFollowup">Autor:</label>
+                                    <input type="text" id="autorFollowup" name="autor" value="Usuário Sistema" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="descricaoFollowup">Descrição:</label>
+                                    <textarea id="descricaoFollowup" name="descricao" rows="10" placeholder="Digite a descrição do follow-up..." required></textarea>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <button type="button" class="btn-template" onclick="aplicarTemplate()">
+                                        📋 Aplicar Template
+                                    </button>
+                                    <small>Clique para usar um template baseado no tipo selecionado</small>
+                                </div>
+                                
+                                <div class="form-actions">
+                                    <button type="button" class="btn-secondary" onclick="fecharModalFollowup()">
+                                        Cancelar
+                                    </button>
+                                    <button type="submit" class="btn-primary">
+                                        💾 Salvar Follow-up
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modal);
+        }
+
+        function fecharModalFollowup(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const modal = document.getElementById('modalFollowup');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function atualizarTemplateTexto() {
+            const tipo = document.getElementById('tipoFollowup').value;
+            const textarea = document.getElementById('descricaoFollowup');
+            
+            // Limpar placeholder anterior
+            textarea.placeholder = "Digite a descrição do follow-up...";
+            
+            // Atualizar placeholder baseado no tipo
+            switch (tipo) {
+                case 'Publicação':
+                    textarea.placeholder = "Template de publicação disponível - clique em 'Aplicar Template'";
+                    break;
+                case 'Desenvolvimento':
+                    textarea.placeholder = "Template de desenvolvimento disponível - clique em 'Aplicar Template'";
+                    break;
+                case 'Análise':
+                    textarea.placeholder = "Template de análise disponível - clique em 'Aplicar Template'";
+                    break;
+                case 'Outros':
+                    textarea.placeholder = "Template genérico disponível - clique em 'Aplicar Template'";
+                    break;
+            }
+        }
+
+        function aplicarTemplate() {
+            const tipo = document.getElementById('tipoFollowup').value;
+            const textarea = document.getElementById('descricaoFollowup');
+            
+            if (!tipo) {
+                mostrarToast('warning', 'Atenção', 'Selecione primeiro o tipo de follow-up.');
+                return;
+            }
+            
+            let template = '';
+            
+            switch (tipo) {
+                case 'Publicação':
+                    template = `Prezados(as),
+Boa Tarde,
+
+Estamos liberando os seguintes Wexes abaixo no sequencial/fila [Nº Sequencial], release [Nº Release]:
+
+- [Nº wex] - [DESCRIÇÃO DO WEX]
+- [Nº wex] - [DESCRIÇÃO DO WEX]
+
+Segue anexo o release notes do módulo.
+
+Muito obrigado,
+Equipe WEX Intelligence`;
+                    break;
+                    
+                case 'Desenvolvimento':
+                    template = `DESENVOLVIMENTO - ANÁLISE TÉCNICA
+
+📋 RESUMO:
+Análise técnica e implementação de solução para o chamado.
+
+🔧 AÇÕES REALIZADAS:
+- Análise do problema reportado
+- Identificação da causa raiz
+- Desenvolvimento da correção
+- Testes em ambiente de desenvolvimento
+
+💻 DETALHES TÉCNICOS:
+- Módulo afetado: [INSERIR MÓDULO]
+- Arquivos alterados: [LISTAR ARQUIVOS]
+- Tipo de alteração: [BugFix/Feature/Enhancement]
+
+✅ TESTES REALIZADOS:
+- Teste unitário: [ ] Concluído
+- Teste integração: [ ] Concluído  
+- Teste regressão: [ ] Concluído
+
+📅 PRÓXIMOS PASSOS:
+- Deploy em ambiente de homologação
+- Validação funcional
+- Deploy em produção (aguardando aprovação)
+
+Desenvolvedor: [NOME]
+Data: ${new Date().toLocaleDateString('pt-BR')}`;
+                    break;
+                    
+                case 'Análise':
+                    template = `ANÁLISE TÉCNICA - RELATÓRIO
+
+🔍 ANÁLISE INICIAL:
+Análise detalhada do problema reportado no chamado.
+
+📊 DIAGNÓSTICO:
+- Sintomas identificados: [DESCREVER]
+- Causa provável: [ANÁLISE]
+- Impacto: [ALTO/MÉDIO/BAIXO]
+- Urgência: [CRÍTICA/ALTA/MÉDIA/BAIXA]
+
+🛠️ INVESTIGAÇÃO REALIZADA:
+- Verificação de logs do sistema
+- Análise de performance
+- Verificação de conectividade
+- Revisão de configurações
+
+💡 CONCLUSÕES:
+[INSERIR CONCLUSÕES DA ANÁLISE]
+
+📋 RECOMENDAÇÕES:
+1. [PRIMEIRA RECOMENDAÇÃO]
+2. [SEGUNDA RECOMENDAÇÃO] 
+3. [TERCEIRA RECOMENDAÇÃO]
+
+⏱️ ESTIMATIVA DE RESOLUÇÃO:
+- Tempo estimado: [X horas/dias]
+- Recursos necessários: [LISTAR]
+- Dependências: [SE HOUVER]
+
+Analista: [NOME]
+Data: ${new Date().toLocaleDateString('pt-BR')}`;
+                    break;
+                    
+                case 'Outros':
+                    template = `FOLLOW-UP - ATUALIZAÇÃO
+
+📋 ATUALIZAÇÃO DO CHAMADO:
+
+🔄 STATUS ATUAL:
+[DESCREVER STATUS ATUAL]
+
+📝 AÇÕES REALIZADAS:
+- [PRIMEIRA AÇÃO]
+- [SEGUNDA AÇÃO]
+- [TERCEIRA AÇÃO]
+
+💬 OBSERVAÇÕES:
+[INSERIR OBSERVAÇÕES RELEVANTES]
+
+📅 PRÓXIMOS PASSOS:
+- [PRÓXIMA AÇÃO]
+- [PRAZO ESTIMADO]
+
+👤 Responsável: [NOME]
+📅 Data: ${new Date().toLocaleDateString('pt-BR')}
+⏰ Horário: ${new Date().toLocaleTimeString('pt-BR')}`;
+                    break;
+            }
+            
+            if (template) {
+                textarea.value = template;
+                mostrarToast('success', 'Template Aplicado', `Template de ${tipo} inserido com sucesso!`);
+            }
+        }
+
+        async function enviarFollowup(event, chamadoId) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            const followupData = {
+                tipo: formData.get('tipo'),
+                descricao: formData.get('descricao'),
+                autor: formData.get('autor'),
+                anexos: []
+            };
+            
+            try {
+                console.log('📤 Enviando follow-up:', followupData);
+                console.log('🎯 Chamado ID:', chamadoId);
+                console.log('🌐 API Base:', API_BASE);
+                
+                mostrarToast('info', 'Enviando', 'Salvando follow-up...');
+                
+                const url = `${API_BASE}/chamados/${chamadoId}/followups`;
+                console.log('🔗 URL completa:', url);
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(followupData)
+                });
+                
+                console.log('📡 Response status:', response.status);
+                console.log('📡 Response ok:', response.ok);
+                
+                if (response.ok) {
+                    const resultado = await response.json();
+                    console.log('✅ Follow-up criado:', resultado);
+                    mostrarToast('success', 'Sucesso', 'Follow-up adicionado com sucesso!');
+                    fecharModalFollowup();
+                    
+                    // Não recarregar a lista para evitar problemas - apenas notificar sucesso
+                    console.log('✅ Follow-up criado:', resultado);
+                } else {
+                    const erro = await response.json();
+                    console.error('❌ Erro na resposta:', erro);
+                    throw new Error(erro.detail || 'Erro ao salvar follow-up');
+                }
+                
+            } catch (error) {
+                console.error('💥 Erro ao enviar follow-up:', error);
+                console.error('💥 Error stack:', error.stack);
+                mostrarToast('error', 'Erro', `Erro ao salvar follow-up: ${error.message}`);
+            }
         }
 
         // Variáveis globais para os gráficos

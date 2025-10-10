@@ -48,7 +48,7 @@ class FollowUpBase(BaseModel):
     anexos: List[str] = Field(default_factory=list)
 
 class FollowUpCreate(FollowUpBase):
-    chamado_id: int
+    pass
 
 class FollowUpUpdate(BaseModel):
     tipo: Optional[TipoFollowUp] = None

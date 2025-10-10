@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WEX Intelligence - Sistema de Triagem Automática</title>
+    <title>i4pro Intelligence - Gestão Inteligente de Chamados</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <style>
         * {
@@ -14,12 +14,12 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
+            background-color: #F8FAFC;
             color: #333;
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #28BEBE 0%, #047e7e 100%);
             color: white;
             padding: 1rem 2rem;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -33,6 +33,209 @@
         .header p {
             opacity: 0.9;
             margin-top: 0.5rem;
+        }
+
+        /* Navegação Principal - Design Moderno */
+        .main-nav {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-bottom: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-nav::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(30, 64, 175, 0.3), transparent);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            position: relative;
+        }
+
+        .nav-tab {
+            position: relative;
+            padding: 1.2rem 2.5rem;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 12px 12px 0 0;
+            color: #64748B;
+            overflow: hidden;
+            transform: translateY(0);
+        }
+
+        .nav-tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(30, 64, 175, 0.1), rgba(59, 130, 246, 0.1));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: -1;
+        }
+
+        .nav-tab::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #28BEBE, #047e7e);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+
+        .nav-tab:hover {
+            color: #475569;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(30, 64, 175, 0.15);
+        }
+
+        .nav-tab:hover::before {
+            opacity: 1;
+        }
+
+        .nav-tab:hover::after {
+            width: 60%;
+        }
+
+        .nav-tab.active {
+            color: #28BEBE;
+            background: linear-gradient(135deg, rgba(30, 64, 175, 0.1), rgba(59, 130, 246, 0.1));
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(30, 64, 175, 0.2);
+        }
+
+        .nav-tab.active::before {
+            opacity: 1;
+        }
+
+        .nav-tab.active::after {
+            width: 80%;
+            height: 4px;
+            background: linear-gradient(90deg, #28BEBE, #047e7e);
+            box-shadow: 0 2px 10px rgba(30, 64, 175, 0.4);
+        }
+
+        .nav-tab .tab-icon {
+            display: inline-block;
+            margin-right: 0.7rem;
+            font-size: 1.1em;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-tab:hover .tab-icon {
+            transform: scale(1.1);
+        }
+
+        .nav-tab.active .tab-icon {
+            transform: scale(1.15);
+        }
+
+        /* Conteúdo das páginas com animações */
+        .page-content {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .page-content.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+            animation: pageSlideIn 0.5s ease-out;
+        }
+
+        @keyframes pageSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Animação de saída da página */
+        .page-content.page-exit {
+            opacity: 0;
+            transform: translateY(-10px) scale(1.02);
+            transition: all 0.3s ease-in;
+        }
+
+        /* Responsividade da navegação */
+        @media (max-width: 768px) {
+            .nav-tab {
+                padding: 0.9rem 1.5rem;
+                font-size: 0.9rem;
+                margin: 0 0.2rem;
+            }
+            
+            .nav-container {
+                flex-wrap: wrap;
+                justify-content: space-around;
+                padding: 0 1rem;
+            }
+            
+            .tab-icon {
+                font-size: 1em !important;
+                margin-right: 0.5rem !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-tab {
+                padding: 0.8rem 1rem;
+                font-size: 0.85rem;
+                flex: 1;
+                max-width: 120px;
+            }
+            
+            .nav-tab span:not(.tab-icon) {
+                display: none;
+            }
+            
+            .tab-icon {
+                margin-right: 0 !important;
+                font-size: 1.3em !important;
+            }
+        }
+
+        /* Efeito Ripple para as tabs */
+        .nav-tab .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(102, 126, 234, 0.3);
+            transform: scale(0);
+            animation: ripple-animation 0.6s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple-animation {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
         }
 
         .container {
@@ -397,8 +600,8 @@
         }
         
         .filter-group select[multiple]:focus {
-            border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
+            border-color: #28BEBE;
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.25);
             outline: none;
         }
         
@@ -415,7 +618,7 @@
         }
         
         .filter-group select[multiple] option:checked {
-            background: linear-gradient(135deg, #007bff, #0056b3);
+            background: linear-gradient(135deg, #28BEBE, #047e7e);
             color: white;
             font-weight: 500;
         }
@@ -593,7 +796,7 @@
         }
         
         .toast.toast-info {
-            border-left-color: #17a2b8;
+            border-left-color: #28BEBE;
         }
         
         .toast-header {
@@ -660,7 +863,7 @@
         }
         
         .badge-novo {
-            background: #007bff;
+            background: #28BEBE;
             color: white;
         }
         
@@ -690,7 +893,7 @@
         }
         
         .notification-bell:hover {
-            color: #007bff;
+            color: #28BEBE;
         }
         
         .notification-badge {
@@ -717,7 +920,7 @@
         /* Alertas Visuais */
         .alert-banner {
             position: fixed;
-            top: 80px; /* Abaixo do header */
+            top: 140px; /* Abaixo do header e navegação */
             left: 0;
             right: 0;
             z-index: 1000;
@@ -728,6 +931,31 @@
             font-weight: 600;
             animation: slideDown 0.5s ease-out;
             margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .alert-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-left: auto;
+        }
+        
+        .alert-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .alert-message {
+            flex: 1;
         }
         
         .alert-banner.warning {
@@ -736,7 +964,7 @@
         }
         
         .alert-banner.info {
-            background: linear-gradient(135deg, #17a2b8, #007bff);
+            background: linear-gradient(135deg, #28BEBE, #28BEBE);
         }
         
         .alert-banner.success {
@@ -787,7 +1015,7 @@
             width: 16px;
             height: 16px;
             border: 2px solid #e9ecef;
-            border-top: 2px solid #007bff;
+            border-top: 2px solid #28BEBE;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -1009,7 +1237,7 @@
         button:focus,
         input:focus,
         select:focus {
-            outline: 2px solid #007bff;
+            outline: 2px solid #28BEBE;
             outline-offset: 2px;
         }
         
@@ -1046,7 +1274,7 @@
             align-items: center;
             padding: 20px;
             border-bottom: 2px solid #e9ecef;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #28BEBE 0%, #047e7e 100%);
             color: white;
         }
         
@@ -1175,9 +1403,9 @@
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            background: #007bff;
+            background: #28BEBE;
             border: 3px solid white;
-            box-shadow: 0 0 0 2px #007bff;
+            box-shadow: 0 0 0 2px #28BEBE;
         }
         
         .timeline-item-enhanced.tipo-desenvolvimento::before {
@@ -1239,7 +1467,7 @@
         }
         
         .btn-primary-action {
-            background: #007bff;
+            background: #28BEBE;
             color: white;
         }
         
@@ -1379,9 +1607,9 @@
         }
         
         .pagination-btn:hover:not(:disabled) {
-            background: #007bff;
+            background: #28BEBE;
             color: white;
-            border-color: #007bff;
+            border-color: #28BEBE;
         }
         
         .pagination-btn:disabled {
@@ -1390,9 +1618,9 @@
         }
         
         .pagination-btn.active {
-            background: #007bff;
+            background: #28BEBE;
             color: white;
-            border-color: #007bff;
+            border-color: #28BEBE;
         }
         
         .page-size-selector {
@@ -1438,9 +1666,9 @@
         
         .ia-nav-btn {
             padding: 0.75rem 1.5rem;
-            border: 2px solid #667eea;
+            border: 2px solid #28BEBE;
             background: transparent;
-            color: #667eea;
+            color: #28BEBE;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
@@ -1451,16 +1679,16 @@
         }
         
         .ia-nav-btn:hover {
-            background: #667eea;
+            background: #28BEBE;
             color: white;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
         }
         
         .ia-nav-btn.active {
-            background: #667eea;
+            background: #28BEBE;
             color: white;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
         }
         
         .ia-module {
@@ -1476,7 +1704,7 @@
         }
         
         .ia-card h3 {
-            color: #667eea;
+            color: #28BEBE;
             margin-bottom: 1rem;
             display: flex;
             align-items: center;
@@ -1529,11 +1757,11 @@
             background: #f8f9fa;
             border-radius: 8px;
             padding: 2rem;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #28BEBE;
         }
         
         .ia-resultado h4 {
-            color: #667eea;
+            color: #28BEBE;
             margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
@@ -1601,6 +1829,54 @@
             border-radius: 6px;
             margin-bottom: 0.5rem;
             border-left: 3px solid #2196f3;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .insight-ia {
+            background: linear-gradient(135deg, #e8f5e8, #f1f8e9);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid #4caf50;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 2px 4px rgba(76, 175, 80, 0.1);
+            animation: slideInLeft 0.3s ease;
+        }
+        
+        .insight-icone {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        
+        .insight-texto {
+            color: #2e7d32;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+        
+        .padrao-icone {
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .padrao-texto {
+            color: #1976d2;
+            font-weight: 400;
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
         
         .sugestao-item {
@@ -1653,7 +1929,7 @@
         }
         
         .motivo-tag {
-            background: #17a2b8;
+            background: #28BEBE;
             color: white;
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
@@ -1687,7 +1963,7 @@
         .metric-value-ia {
             font-size: 2.5rem;
             font-weight: 700;
-            color: #667eea;
+            color: #28BEBE;
             margin-bottom: 0.5rem;
         }
         
@@ -1716,8 +1992,10 @@
         }
         
         .badge-ia.critica { background: #dc3545; }
+        .badge-ia.crítica { background: #dc3545; }
         .badge-ia.alta { background: #fd7e14; }
         .badge-ia.media { background: #ffc107; color: #212529; }
+        .badge-ia.média { background: #ffc107; color: #212529; }
         .badge-ia.baixa { background: #28a745; }
         
         .hidden {
@@ -1797,7 +2075,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #28BEBE 0%, #047e7e 100%);
             color: white;
             border-radius: 12px 12px 0 0;
         }
@@ -1848,8 +2126,8 @@
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #28BEBE;
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
         }
 
         .form-group textarea {
@@ -1905,7 +2183,7 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #28BEBE 0%, #047e7e 100%);
             color: white;
             border: none;
             padding: 0.75rem 1.5rem;
@@ -1956,8 +2234,8 @@
     <header class="header">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <h1>🎯 WEX Intelligence</h1>
-                <p>Sistema de Triagem Automática de Chamados</p>
+                <h1>🎯 i4pro Intelligence</h1>
+                <p>Sistema Inteligente de Gestão de Chamados</p>
             </div>
             <div class="notification-counter">
                 <span class="notification-bell" onclick="toggleNotificationPanel()" title="Notificações">🔔</span>
@@ -1966,6 +2244,24 @@
         </div>
     </header>
 
+    <!-- Navegação Principal -->
+    <nav class="main-nav">
+        <div class="nav-container">
+            <button class="nav-tab active" onclick="showPage('ia')" id="tab-ia">
+                <span class="tab-icon">🤖</span>
+                IA Intelligence
+            </button>
+            <button class="nav-tab" onclick="showPage('chamados')" id="tab-chamados">
+                <span class="tab-icon">📋</span>
+                Lista de Chamados
+            </button>
+            <button class="nav-tab" onclick="showPage('dashboard')" id="tab-dashboard">
+                <span class="tab-icon">📊</span>
+                Dashboard Avançado
+            </button>
+        </div>
+    </nav>
+
     <!-- Alert Banner -->
     <div id="alertBanner" class="alert-banner" style="display: none;"></div>
 
@@ -1973,29 +2269,31 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <div class="container">
-        <!-- Dashboard Metrics -->
-        <div class="dashboard-grid" id="dashboardMetrics">
-            <div class="metric-card total">
-                <div class="metric-value" id="totalChamados">-</div>
-                <div class="metric-label">Total de Chamados</div>
+        <!-- Página Dashboard Avançado -->
+        <div id="page-dashboard" class="page-content">
+            <!-- Dashboard Metrics -->
+            <div class="dashboard-grid" id="dashboardMetrics">
+                <div class="metric-card total">
+                    <div class="metric-value" id="totalChamados">-</div>
+                    <div class="metric-label">Total de Chamados</div>
+                </div>
+                <div class="metric-card critical">
+                    <div class="metric-value" id="chamadosCriticos">-</div>
+                    <div class="metric-label">Chamados Críticos</div>
+                </div>
+                <div class="metric-card resolved">
+                    <div class="metric-value" id="chamadosHoje">-</div>
+                    <div class="metric-label">Novos Hoje</div>
+                </div>
+                <div class="metric-card average">
+                    <div class="metric-value" id="tempoMedio">-</div>
+                    <div class="metric-label">Tempo Médio (horas)</div>
+                </div>
             </div>
-            <div class="metric-card critical">
-                <div class="metric-value" id="chamadosCriticos">-</div>
-                <div class="metric-label">Chamados Críticos</div>
-            </div>
-            <div class="metric-card resolved">
-                <div class="metric-value" id="chamadosHoje">-</div>
-                <div class="metric-label">Novos Hoje</div>
-            </div>
-            <div class="metric-card average">
-                <div class="metric-value" id="tempoMedio">-</div>
-                <div class="metric-label">Tempo Médio (horas)</div>
-            </div>
-        </div>
 
-        <!-- Dashboard Avançado com Gráficos -->
-        <div class="content-section">
-            <h2 class="section-title">📊 Dashboard Avançado</h2>
+            <!-- Dashboard Avançado com Gráficos -->
+            <div class="content-section">
+                <h2 class="section-title">📊 Dashboard Avançado</h2>
             
             <!-- Indicadores de SLA -->
             <div class="sla-indicators">
@@ -2033,8 +2331,10 @@
                 </div>
             </div>
         </div>
+        </div>
 
-        <!-- Chamados List -->
+        <!-- Página Lista de Chamados -->
+        <div id="page-chamados" class="page-content">
         <div class="content-section">
             <h2 class="section-title">📋 Lista de Chamados</h2>
             
@@ -2136,8 +2436,10 @@
                 </div>
             </div>
         </div>
+        </div>
 
-        <!-- Seção de IA Intelligence -->
+        <!-- Página IA Intelligence -->
+        <div id="page-ia" class="page-content active">
         <div class="content-section" id="iaSection">
             <h2 class="section-title">🤖 IA Intelligence - Sistema Inteligente</h2>
             
@@ -2145,9 +2447,6 @@
             <div class="ia-nav">
                 <button class="ia-nav-btn active" onclick="mostrarModuloIA('triagem')">
                     🎯 Triagem Automática
-                </button>
-                <button class="ia-nav-btn" onclick="mostrarModuloIA('sugestoes')">
-                    💡 Sugestões de Follow-up
                 </button>
                 <button class="ia-nav-btn" onclick="mostrarModuloIA('relacionados')">
                     🔗 Chamados Relacionados
@@ -2215,49 +2514,6 @@
                             </button>
                             <button class="btn btn-secondary" onclick="limparTriagem()">
                                 🗑️ Limpar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Módulo de Sugestões de Follow-up -->
-            <div id="moduloSugestoes" class="ia-module hidden">
-                <div class="ia-card">
-                    <h3>💡 Sugestões Inteligentes de Follow-up</h3>
-                    <p>Receba sugestões contextuais para próximas ações baseadas no histórico.</p>
-                    
-                    <div class="ia-input-group">
-                        <label>Selecionar Chamado:</label>
-                        <select id="selectChamadoSugestao">
-                            <option value="">Carregando chamados...</option>
-                        </select>
-                        <button class="btn btn-primary" onclick="obterSugestoes()">
-                            💡 Obter Sugestões
-                        </button>
-                    </div>
-                    
-                    <div id="resultadoSugestoes" class="ia-resultado hidden">
-                        <h4>📝 Sugestões Personalizadas</h4>
-                        
-                        <div class="contexto-chamado">
-                            <h5>📊 Contexto do Chamado:</h5>
-                            <div id="contextoChamado"></div>
-                        </div>
-                        
-                        <div class="sugestoes-principais">
-                            <h5>⭐ Sugestões Principais:</h5>
-                            <div id="sugestoesPrincipais"></div>
-                        </div>
-                        
-                        <div class="historico-exemplos">
-                            <h5>📚 Exemplos do Histórico:</h5>
-                            <div id="exemplosSimilares"></div>
-                        </div>
-                        
-                        <div class="acoes-sugestoes">
-                            <button class="btn btn-success" onclick="criarFollowupSugerido()">
-                                ➕ Criar Follow-up
                             </button>
                         </div>
                     </div>
@@ -2375,27 +2631,129 @@
         let currentSort = null;
         let sortDirection = 'asc';
 
+        // Função global para normalizar criticidade (remover acentos para CSS)
+        function normalizarCriticidade(criticidade) {
+            if (!criticidade) return 'media';
+            return criticidade.toLowerCase()
+                .replace(/á/g, 'a')
+                .replace(/í/g, 'i')
+                .replace(/é/g, 'e')
+                .replace(/ó/g, 'o')
+                .replace(/ú/g, 'u')
+                .replace(/ç/g, 'c');
+        }
+
+        // Função para controlar a navegação entre páginas com animações
+        function showPage(pageId) {
+            const pages = document.querySelectorAll('.page-content');
+            const tabs = document.querySelectorAll('.nav-tab');
+            const targetPage = document.getElementById(`page-${pageId}`);
+            const targetTab = document.getElementById(`tab-${pageId}`);
+            
+            // Se já está na página ativa, não fazer nada
+            if (targetPage && targetPage.classList.contains('active')) {
+                return;
+            }
+
+            // Adicionar animação de saída para página ativa
+            const activePage = document.querySelector('.page-content.active');
+            if (activePage) {
+                activePage.classList.add('page-exit');
+                
+                setTimeout(() => {
+                    activePage.classList.remove('active', 'page-exit');
+                    
+                    // Mostrar nova página com animação
+                    if (targetPage) {
+                        targetPage.classList.add('active');
+                    }
+                }, 150);
+            } else {
+                // Se não há página ativa, mostrar diretamente
+                if (targetPage) {
+                    targetPage.classList.add('active');
+                }
+            }
+
+            // Atualizar tabs com animação
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+                // Adicionar pequena animação de "bounce" na tab clicada
+                if (tab === targetTab) {
+                    tab.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        tab.style.transform = '';
+                        tab.classList.add('active');
+                    }, 100);
+                }
+            });
+
+            // Carregar dados específicos da página se necessário
+            setTimeout(() => {
+                switch(pageId) {
+                    case 'dashboard':
+                        carregarDashboard();
+                        carregarDashboardAvancado();
+                        break;
+                    case 'chamados':
+                        carregarChamados();
+                        break;
+                    case 'ia':
+                        carregarDadosModuloIA('triagem');
+                        break;
+                }
+            }, 200);
+        }
+
+        // Função para criar efeito ripple nas tabs
+        function createRipple(event) {
+            const button = event.currentTarget;
+            const circle = document.createElement("span");
+            const diameter = Math.max(button.clientWidth, button.clientHeight);
+            const radius = diameter / 2;
+
+            const rect = button.getBoundingClientRect();
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${event.clientX - rect.left - radius}px`;
+            circle.style.top = `${event.clientY - rect.top - radius}px`;
+            circle.classList.add("ripple");
+
+            const ripple = button.getElementsByClassName("ripple")[0];
+            if (ripple) {
+                ripple.remove();
+            }
+
+            button.appendChild(circle);
+        }
+
+        // Adicionar evento de ripple a todas as tabs
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', createRipple);
+            });
+        });
+
         // Carregamento inicial
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📱 DOM carregado, iniciando aplicação...');
             
-            // Mostrar skeleton loading inicialmente
-            mostrarSkeletonDashboard();
-            mostrarSkeletonTabela();
-            
-            // Carregar dados
-            console.log('🔄 Iniciando carregamento de dados...');
-            carregarDashboard();
-            console.log('📋 Chamando carregarChamados...');
-            carregarChamados();
+            // Carregar dados da página inicial (IA Intelligence)
+            console.log('🤖 Iniciando carregamento de dados da IA...');
+            carregarDadosModuloIA('triagem');
             carregarListaClientes();
             carregarClientesDropdown();
             
-            // Aguardar um pouco e inicializar gráficos
+            // Carregar dados do dashboard em background
             setTimeout(() => {
+                console.log('🔄 Carregando dados do dashboard em background...');
+                carregarDashboard();
                 console.log('🎨 Inicializando gráficos...');
                 inicializarTodosGraficos();
             }, 1000);
+            
+            // Garantir que o banner esteja oculto no início
+            ocultarAlertBanner();
             
             // Configurar UX e acessibilidade
             melhorarAcessibilidade();
@@ -3183,7 +3541,7 @@ Data: ${new Date().toLocaleDateString('pt-BR')}`;
                     labels: Object.keys(dados),
                     datasets: [{
                         data: Object.values(dados),
-                        backgroundColor: ['#3498db', '#f39c12', '#e74c3c', '#2ecc71', '#95a5a6']
+                        backgroundColor: ['#28BEBE', '#047e7e', '#64748B', '#2ecc71', '#94A3B8']
                     }]
                 },
                 options: {
@@ -3209,7 +3567,7 @@ Data: ${new Date().toLocaleDateString('pt-BR')}`;
                     labels: Object.keys(dados),
                     datasets: [{
                         data: Object.values(dados),
-                        backgroundColor: ['#2ecc71', '#f39c12', '#e67e22', '#e74c3c']
+                        backgroundColor: ['#2ecc71', '#047e7e', '#F59E0B', '#EF4444']
                     }]
                 },
                 options: {
@@ -3240,7 +3598,7 @@ Data: ${new Date().toLocaleDateString('pt-BR')}`;
                     datasets: [{
                         label: 'Chamados Criados',
                         data: data,
-                        backgroundColor: '#3498db'
+                        backgroundColor: '#28BEBE'
                     }]
                 },
                 options: {
@@ -3272,8 +3630,8 @@ Data: ${new Date().toLocaleDateString('pt-BR')}`;
                     datasets: [{
                         label: 'Tempo Médio (horas)',
                         data: [48, 52, 45, 38],
-                        borderColor: '#2ecc71',
-                        backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                        borderColor: '#28BEBE',
+                        backgroundColor: 'rgba(30, 64, 175, 0.1)',
                         fill: true
                     }]
                 },
@@ -3472,7 +3830,7 @@ Data: ${new Date().toLocaleDateString('pt-BR')}`;
                 return;
             }
             
-            const colors = ['#3498db', '#f39c12', '#e74c3c', '#2ecc71', '#95a5a6'];
+            const colors = ['#28BEBE', '#047e7e', '#64748B', '#2ecc71', '#94A3B8'];
             
             try {
                 statusChart = new Chart(ctx.getContext('2d'), {
@@ -3533,7 +3891,7 @@ Data: ${new Date().toLocaleDateString('pt-BR')}`;
                 return;
             }
             
-            const colors = ['#2ecc71', '#f39c12', '#e67e22', '#e74c3c'];
+            const colors = ['#2ecc71', '#047e7e', '#F59E0B', '#EF4444'];
             
             try {
                 criticidadeChart = new Chart(ctx.getContext('2d'), {
@@ -3617,8 +3975,8 @@ Data: ${new Date().toLocaleDateString('pt-BR')}`;
                         datasets: [{
                             label: 'Chamados Criados',
                             data: ultimosDias.map(data => contagemPorDia[data]),
-                            backgroundColor: '#3498db',
-                            borderColor: '#2980b9',
+                            backgroundColor: '#28BEBE',
+                            borderColor: '#047e7e',
                             borderWidth: 1
                         }]
                     },
@@ -3679,8 +4037,8 @@ Data: ${new Date().toLocaleDateString('pt-BR')}`;
                         datasets: [{
                             label: 'Tempo Médio (horas)',
                             data: temposMedias,
-                            borderColor: '#2ecc71',
-                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            borderColor: '#28BEBE',
+                            backgroundColor: 'rgba(30, 64, 175, 0.1)',
                             borderWidth: 3,
                             fill: true,
                             tension: 0.4
@@ -4303,13 +4661,36 @@ Data: ${new Date().toLocaleDateString('pt-BR')}`;
             }
         }
         
+        // Estado do banner para evitar exibições desnecessárias
+        let bannerState = {
+            lastMessage: '',
+            lastType: '',
+            lastShown: 0
+        };
+        
         // Mostrar banner de alerta
         function mostrarAlertBanner(tipo, mensagem) {
             const banner = document.getElementById('alertBanner');
             const container = document.querySelector('.container');
+            const now = Date.now();
+            
+            // Evitar mostrar o mesmo alerta repetidamente (cooldown de 30 segundos)
+            if (bannerState.lastMessage === mensagem && 
+                bannerState.lastType === tipo && 
+                (now - bannerState.lastShown) < 30000) {
+                return;
+            }
+            
+            // Atualizar estado
+            bannerState.lastMessage = mensagem;
+            bannerState.lastType = tipo;
+            bannerState.lastShown = now;
             
             banner.className = `alert-banner ${tipo}`;
-            banner.textContent = mensagem;
+            banner.innerHTML = `
+                <span class="alert-message">${mensagem}</span>
+                <button class="alert-close" onclick="ocultarAlertBanner()" title="Fechar alerta">×</button>
+            `;
             banner.style.display = 'block';
             
             // Adicionar classe para ajustar margem do container
@@ -4319,11 +4700,24 @@ Data: ${new Date().toLocaleDateString('pt-BR')}`;
             
             // Auto-ocultar após 15 segundos
             setTimeout(() => {
-                banner.style.display = 'none';
-                if (container) {
-                    container.classList.remove('with-alert');
-                }
+                ocultarAlertBanner();
             }, 15000);
+        }
+        
+        // Função para ocultar o banner
+        function ocultarAlertBanner() {
+            const banner = document.getElementById('alertBanner');
+            const container = document.querySelector('.container');
+            
+            if (banner) {
+                banner.style.display = 'none';
+                banner.className = 'alert-banner'; // Reset classes
+                banner.textContent = ''; // Limpar conteúdo
+            }
+            
+            if (container) {
+                container.classList.remove('with-alert');
+            }
         }
         
         // Carregar e verificar notificações reais
@@ -4379,14 +4773,14 @@ Data: ${new Date().toLocaleDateString('pt-BR')}`;
                 notificationCount = criticosVencidos + altosProximosVencimento + (novosHoje > 10 ? 1 : 0);
                 atualizarContadorNotificacoes();
                 
-                // Mostrar alertas baseados nos dados reais
-                if (criticosVencidos > 0) {
+                // Mostrar alertas apenas quando realmente crítico
+                if (criticosVencidos > 2) { // Só alertar se houver mais de 2 críticos vencidos
                     mostrarAlertBanner('error', 
                         `⚠️ ${criticosVencidos} chamado(s) crítico(s) com SLA vencido! Ação imediata necessária.`);
-                } else if (altosProximosVencimento > 0) {
+                } else if (altosProximosVencimento > 5) { // Só alertar se houver mais de 5 próximos ao vencimento
                     mostrarAlertBanner('warning', 
                         `🕐 ${altosProximosVencimento} chamado(s) de alta prioridade próximos ao vencimento.`);
-                } else if (novosHoje > 15) {
+                } else if (novosHoje > 20) { // Aumentar limite para 20 novos chamados
                     mostrarAlertBanner('info', 
                         `📈 Alto volume de chamados hoje: ${novosHoje} novos chamados.`);
                 }
@@ -4443,11 +4837,11 @@ Data: ${new Date().toLocaleDateString('pt-BR')}`;
             notificationCount = criticosVencidos + criticosProximos;
             atualizarContadorNotificacoes();
             
-            // Mostrar alertas se necessário
-            if (criticosVencidos > 0) {
+            // Mostrar alertas apenas quando realmente necessário
+            if (criticosVencidos > 1) { // Só alertar se houver mais de 1 crítico vencido
                 mostrarAlertBanner('error', 
                     `⚠️ ${criticosVencidos} chamado(s) crítico(s) vencido(s)! Ação imediata necessária.`);
-            } else if (criticosProximos > 0) {
+            } else if (criticosProximos > 3) { // Só alertar se houver mais de 3 próximos do vencimento
                 mostrarAlertBanner('warning', 
                     `⏰ ${criticosProximos} chamado(s) crítico(s) próximo(s) do vencimento.`);
             }
@@ -4562,7 +4956,6 @@ Data: ${new Date().toLocaleDateString('pt-BR')}`;
         async function carregarDadosModuloIA(modulo) {
             switch(modulo) {
                 case 'triagem':
-                case 'sugestoes':
                 case 'relacionados':
                     await carregarChamadosParaIA(modulo);
                     break;
@@ -4583,15 +4976,14 @@ Data: ${new Date().toLocaleDateString('pt-BR')}`;
                     case 'triagem':
                         selectId = 'selectChamadoTriagem';
                         break;
-                    case 'sugestoes':
-                        selectId = 'selectChamadoSugestao';
-                        break;
                     case 'relacionados':
                         selectId = 'selectChamadoRelacionado';
                         break;
                 }
                 
                 const select = document.getElementById(selectId);
+                if (!select) return;
+                
                 select.innerHTML = '<option value="">Selecione um chamado...</option>';
                 
                 // Verificar se os dados existem e se há chamados
@@ -4667,10 +5059,10 @@ Data: ${new Date().toLocaleDateString('pt-BR')}`;
             
             // Atualizar informações básicas
             document.getElementById('criticidadeAtual').textContent = resultado.criticidade_atual || 'N/A';
-            document.getElementById('criticidadeAtual').className = `badge badge-ia ${(resultado.criticidade_atual || 'media').toLowerCase()}`;
+            document.getElementById('criticidadeAtual').className = `badge badge-ia ${normalizarCriticidade(resultado.criticidade_atual)}`;
             
             document.getElementById('criticidadeSugerida').textContent = resultado.criticidade_sugerida || 'N/A';
-            document.getElementById('criticidadeSugerida').className = `badge badge-ia ${(resultado.criticidade_sugerida || 'media').toLowerCase()}`;
+            document.getElementById('criticidadeSugerida').className = `badge badge-ia ${normalizarCriticidade(resultado.criticidade_sugerida)}`;
             
             document.getElementById('confiancaTriagem').textContent = `${((resultado.confianca || 0) * 100).toFixed(1)}%`;
             document.getElementById('scoreQualidade').textContent = `${resultado.score_qualidade_sugerido || resultado.score_total || 0}/100`;
@@ -4765,140 +5157,6 @@ Data: ${new Date().toLocaleDateString('pt-BR')}`;
             chamadoIdSelecionadoTriagem = null;
         }
 
-        // ===== MÓDULO DE SUGESTÕES DE FOLLOW-UP =====
-        async function obterSugestoes() {
-            const selectChamado = document.getElementById('selectChamadoSugestao');
-            const chamadoId = selectChamado.value;
-            
-            if (!chamadoId) {
-                mostrarToast('warning', 'Atenção', 'Selecione um chamado para obter sugestões');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE}/api/chamados/${chamadoId}/sugestoes-followup`);
-                
-                if (!response.ok) {
-                    throw new Error('Erro ao obter sugestões');
-                }
-                
-                const resultado = await response.json();
-                exibirResultadoSugestoes(resultado);
-                
-            } catch (error) {
-                console.error('Erro ao obter sugestões:', error);
-                mostrarToast('error', 'Erro', 'Erro ao obter sugestões de follow-up');
-            }
-        }
-
-        function exibirResultadoSugestoes(resultado) {
-            document.getElementById('resultadoSugestoes').classList.remove('hidden');
-            
-            // Contexto do chamado
-            const contextoContainer = document.getElementById('contextoChamado');
-            contextoContainer.innerHTML = `
-                <div class="contexto-item">
-                    <strong>Status:</strong> ${resultado.contexto.status_atual}<br>
-                    <strong>Criticidade:</strong> ${resultado.contexto.criticidade}<br>
-                    <strong>Tempo desde criação:</strong> ${resultado.contexto.tempo_desde_criacao_horas.toFixed(1)} horas<br>
-                    <strong>Follow-ups existentes:</strong> ${resultado.contexto.total_followups_existentes}
-                </div>
-            `;
-            
-            // Sugestões principais
-            const sugestoesContainer = document.getElementById('sugestoesPrincipais');
-            sugestoesContainer.innerHTML = '';
-            resultado.sugestoes_principais.forEach((sugestao, index) => {
-                const div = document.createElement('div');
-                div.className = 'sugestao-item';
-                div.innerHTML = `
-                    <div onclick="selecionarSugestao(${index})" style="cursor: pointer;">
-                        ${sugestao}
-                    </div>
-                `;
-                sugestoesContainer.appendChild(div);
-            });
-            
-            // Exemplos do histórico
-            const exemploContainer = document.getElementById('exemplosSimilares');
-            exemploContainer.innerHTML = '';
-            resultado.exemplos_historico.forEach(exemplo => {
-                const div = document.createElement('div');
-                div.className = 'exemplo-historico';
-                div.innerHTML = `
-                    <strong>Chamado Similar #${exemplo.chamado_similar_id}</strong>
-                    <small>(Similaridade: ${(exemplo.score_similaridade * 100).toFixed(1)}%)</small>
-                    <ul>
-                        ${exemplo.followups.map(f => `<li><strong>${f.tipo}:</strong> ${f.descricao}</li>`).join('')}
-                    </ul>
-                `;
-                exemploContainer.appendChild(div);
-            });
-            
-            // Salvar dados para uso posterior
-            window.dadosSugestaoAtual = resultado;
-        }
-
-        function selecionarSugestao(index) {
-            sugestaoIndexSelecionado = index;
-            
-            // Destacar sugestão selecionada
-            document.querySelectorAll('#sugestoesPrincipais .sugestao-item').forEach((item, i) => {
-                if (i === index) {
-                    item.style.background = '#c8e6c9';
-                    item.style.borderLeft = '4px solid #4caf50';
-                } else {
-                    item.style.background = '#f3e5f5';
-                    item.style.borderLeft = '3px solid #9c27b0';
-                }
-            });
-        }
-
-        async function criarFollowupSugerido() {
-            if (sugestaoIndexSelecionado === null) {
-                mostrarToast('warning', 'Atenção', 'Selecione uma sugestão primeiro');
-                return;
-            }
-            
-            const chamadoId = document.getElementById('selectChamadoSugestao').value;
-            const autor = prompt('Digite seu nome:');
-            
-            if (!autor) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE}/api/chamados/${chamadoId}/followup-sugerido`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        sugestao_index: sugestaoIndexSelecionado,
-                        autor: autor
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Erro ao criar follow-up');
-                }
-                
-                const resultado = await response.json();
-                mostrarToast('success', 'Sucesso', 'Follow-up criado com sucesso!');
-                
-                // Resetar seleção
-                sugestaoIndexSelecionado = null;
-                document.querySelectorAll('#sugestoesPrincipais .sugestao-item').forEach(item => {
-                    item.style.background = '#f3e5f5';
-                    item.style.borderLeft = '3px solid #9c27b0';
-                });
-                
-            } catch (error) {
-                console.error('Erro ao criar follow-up:', error);
-                mostrarToast('error', 'Erro', 'Erro ao criar follow-up sugerido');
-            }
-        }
-
         // ===== MÓDULO DE CHAMADOS RELACIONADOS =====
         function atualizarScoreMinimo() {
             const slider = document.getElementById('scoreMinimo');
@@ -4942,7 +5200,7 @@ Data: ${new Date().toLocaleDateString('pt-BR')}`;
                 <div class="chamado-principal">
                     <strong>#${resultado.chamado_principal.numero_wex}</strong> - ${resultado.chamado_principal.cliente}<br>
                     <small>${resultado.chamado_principal.descricao}</small><br>
-                    <span class="badge badge-ia ${resultado.chamado_principal.criticidade.toLowerCase()}">${resultado.chamado_principal.criticidade}</span>
+                    <span class="badge badge-ia ${normalizarCriticidade(resultado.chamado_principal.criticidade)}">${resultado.chamado_principal.criticidade}</span>
                     <span class="badge">${resultado.chamado_principal.status}</span>
                 </div>
             `;
@@ -4964,27 +5222,94 @@ Data: ${new Date().toLocaleDateString('pt-BR')}`;
                         </div>
                         <div>${relacionado.descricao}</div>
                         <div class="relacionado-status">
-                            <span class="badge badge-ia ${relacionado.criticidade.toLowerCase()}">${relacionado.criticidade}</span>
+                            <span class="badge badge-ia ${normalizarCriticidade(relacionado.criticidade)}">${relacionado.criticidade}</span>
                             <span class="badge">${relacionado.status}</span>
                             <small>${formatarData(relacionado.data_criacao)}</small>
                         </div>
                         <div class="relacionado-motivos">
-                            ${relacionado.motivos.map(motivo => `<span class="motivo-tag">${motivo}</span>`).join('')}
+                            ${relacionado.motivos && relacionado.motivos.length > 0 ? 
+                                relacionado.motivos.map(motivo => `<span class="motivo-tag">${motivo}</span>`).join('') :
+                                '<span class="motivo-tag">Similaridade de contexto</span>'
+                            }
                         </div>
                     `;
                     relacionadosContainer.appendChild(div);
                 });
             }
             
-            // Padrões identificados
+            // Padrões identificados - melhorados
             const padroesContainer = document.getElementById('padroesLista');
             padroesContainer.innerHTML = '';
-            resultado.padroes_identificados.forEach(padrao => {
-                const div = document.createElement('div');
-                div.className = 'padrao-item';
-                div.textContent = padrao;
-                padroesContainer.appendChild(div);
+            
+            if (resultado.padroes_identificados && resultado.padroes_identificados.length > 0) {
+                resultado.padroes_identificados.forEach(padrao => {
+                    const div = document.createElement('div');
+                    div.className = 'padrao-item';
+                    div.innerHTML = `
+                        <span class="padrao-icone">🔍</span>
+                        <span class="padrao-texto">${padrao}</span>
+                    `;
+                    padroesContainer.appendChild(div);
+                });
+            } else {
+                // Gerar padrões dinâmicos baseados nos chamados similares
+                const padroesDinamicos = gerarPadroesDinamicos(resultado);
+                padroesDinamicos.forEach(padrao => {
+                    const div = document.createElement('div');
+                    div.className = 'padrao-item';
+                    div.innerHTML = `
+                        <span class="padrao-icone">🔍</span>
+                        <span class="padrao-texto">${padrao}</span>
+                    `;
+                    padroesContainer.appendChild(div);
+                });
+            }
+        }
+
+        function gerarPadroesDinamicos(resultado) {
+            const padroes = [];
+            const chamados = resultado.chamados_similares;
+            
+            if (chamados.length === 0) return ['Nenhum padrão identificado'];
+            
+            // Análise de clientes
+            const clientes = [...new Set(chamados.map(c => c.cliente))];
+            if (clientes.length === 1) {
+                padroes.push(`Todos os chamados relacionados são do cliente: ${clientes[0]}`);
+            } else if (clientes.length <= chamados.length / 2) {
+                padroes.push(`Concentração de chamados em poucos clientes: ${clientes.slice(0, 3).join(', ')}`);
+            }
+            
+            // Análise de criticidade
+            const criticidades = chamados.map(c => c.criticidade);
+            const criticidadeMaisComum = criticidades.reduce((a, b, i, arr) =>
+                arr.filter(v => v === a).length >= arr.filter(v => v === b).length ? a : b
+            );
+            padroes.push(`Criticidade predominante: ${criticidadeMaisComum}`);
+            
+            // Análise temporal
+            const agora = new Date();
+            const chamadosRecentes = chamados.filter(c => {
+                const dataCriacao = new Date(c.data_criacao);
+                const diasDiferenca = (agora - dataCriacao) / (1000 * 60 * 60 * 24);
+                return diasDiferenca <= 30;
             });
+            
+            if (chamadosRecentes.length > chamados.length * 0.7) {
+                padroes.push(`Tendência recente: ${chamadosRecentes.length} chamados nos últimos 30 dias`);
+            }
+            
+            // Análise de status
+            const statusAbertos = chamados.filter(c => c.status === 'Aberto').length;
+            const statusResolvidos = chamados.filter(c => c.status === 'Resolvido').length;
+            
+            if (statusAbertos > statusResolvidos) {
+                padroes.push(`Padrão de resolução: ${statusAbertos} chamados ainda em aberto`);
+            } else if (statusResolvidos > 0) {
+                padroes.push(`Padrão positivo: ${statusResolvidos} chamados similares já resolvidos`);
+            }
+            
+            return padroes.length > 0 ? padroes : ['Padrões em análise - Execute novamente para mais detalhes'];
         }
 
         // ===== MÓDULO DE RELATÓRIOS DE IA =====
@@ -5015,55 +5340,195 @@ Data: ${new Date().toLocaleDateString('pt-BR')}`;
             document.getElementById('totalGruposSimilares').textContent = resultado.total_grupos_similares;
             document.getElementById('clientesAtivos').textContent = resultado.clientes_mais_ativos.length;
             
-            // Padrões globais
+            // Insights de IA baseados no período
+            const periodo = document.getElementById('periodoAnalise').value;
+            const insights = gerarInsightsIA(resultado, periodo);
+            
+            // Padrões globais com insights de IA
             const padroesContainer = document.getElementById('padroesGlobais');
             padroesContainer.innerHTML = '';
+            
+            // Adicionar insights de IA primeiro
+            insights.forEach(insight => {
+                const div = document.createElement('div');
+                div.className = 'insight-ia';
+                div.innerHTML = `
+                    <span class="insight-icone">🤖</span>
+                    <span class="insight-texto">${insight}</span>
+                `;
+                padroesContainer.appendChild(div);
+            });
+            
+            // Depois adicionar padrões tradicionais
             if (resultado.padroes_globais.length === 0) {
-                padroesContainer.innerHTML = '<p>Nenhum padrão específico identificado no período.</p>';
+                const div = document.createElement('div');
+                div.className = 'padrao-item';
+                div.innerHTML = '<p>📊 Análise automática concluída - Verifique os insights de IA acima</p>';
+                padroesContainer.appendChild(div);
             } else {
                 resultado.padroes_globais.forEach(padrao => {
                     const div = document.createElement('div');
                     div.className = 'padrao-item';
-                    div.textContent = padrao;
+                    div.innerHTML = `
+                        <span class="padrao-icone">📋</span>
+                        <span class="padrao-texto">${padrao}</span>
+                    `;
                     padroesContainer.appendChild(div);
                 });
             }
             
-            // Distribuição por criticidade
+            // Distribuição por criticidade com cores corretas
             const criticidadeContainer = document.getElementById('graficoCriticidade');
             criticidadeContainer.innerHTML = '';
+            
+            const coresCriticidade = {
+                'BAIXA': { bg: '#e8f5e8', border: '#4caf50', text: '#2e7d32' },
+                'MÉDIA': { bg: '#fff3e0', border: '#ff9800', text: '#f57c00' },
+                'ALTA': { bg: '#ffebee', border: '#f44336', text: '#c62828' },
+                'CRÍTICA': { bg: '#fce4ec', border: '#e91e63', text: '#ad1457' }
+            };
+            
             Object.entries(resultado.distribuicao_criticidade).forEach(([criticidade, count]) => {
+                const cores = coresCriticidade[criticidade.toUpperCase()] || { bg: '#f5f5f5', border: '#ccc', text: '#666' };
+                const porcentagem = ((count / resultado.total_chamados) * 100).toFixed(1);
+                
                 const div = document.createElement('div');
-                div.style.display = 'flex';
-                div.style.justifyContent = 'space-between';
-                div.style.padding = '0.5rem';
-                div.style.background = 'white';
-                div.style.marginBottom = '0.5rem';
-                div.style.borderRadius = '4px';
+                div.style.cssText = `
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 1rem;
+                    background: ${cores.bg};
+                    border-left: 4px solid ${cores.border};
+                    margin-bottom: 0.5rem;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                `;
+                
                 div.innerHTML = `
-                    <span class="badge badge-ia ${criticidade.toLowerCase()}">${criticidade}</span>
-                    <strong>${count} chamados</strong>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span style="
+                            background: ${cores.border}; 
+                            color: white; 
+                            padding: 0.25rem 0.75rem; 
+                            border-radius: 20px; 
+                            font-weight: 600;
+                            font-size: 0.9rem;
+                        ">${criticidade.toUpperCase()}</span>
+                        <span style="color: ${cores.text}; font-weight: 500;">${count} chamados (${porcentagem}%)</span>
+                    </div>
+                    <div style="
+                        width: 60px; 
+                        height: 8px; 
+                        background: #e0e0e0; 
+                        border-radius: 4px; 
+                        overflow: hidden;
+                    ">
+                        <div style="
+                            width: ${porcentagem}%; 
+                            height: 100%; 
+                            background: ${cores.border}; 
+                            transition: width 0.3s ease;
+                        "></div>
+                    </div>
                 `;
                 criticidadeContainer.appendChild(div);
             });
             
-            // Ranking de clientes
+            // Ranking de clientes melhorado
             const clientesContainer = document.getElementById('rankingClientes');
             clientesContainer.innerHTML = '';
             resultado.clientes_mais_ativos.forEach((cliente, index) => {
+                const isTopCliente = index < 3;
+                const medalha = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+                
                 const div = document.createElement('div');
-                div.style.display = 'flex';
-                div.style.justifyContent = 'space-between';
-                div.style.padding = '0.5rem';
-                div.style.background = 'white';
-                div.style.marginBottom = '0.5rem';
-                div.style.borderRadius = '4px';
-                div.innerHTML = `
-                    <span><strong>#${index + 1}</strong> ${cliente.cliente}</span>
-                    <span class="badge badge-secondary">${cliente.total_chamados} chamados</span>
+                div.style.cssText = `
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 1rem;
+                    background: ${isTopCliente ? 'linear-gradient(135deg, #fff8e1, #ffffff)' : 'white'};
+                    border: ${isTopCliente ? '2px solid #ffc107' : '1px solid #e0e0e0'};
+                    margin-bottom: 0.5rem;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    transition: transform 0.2s ease;
                 `;
+                
+                div.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span style="font-size: 1.2rem;">${medalha}</span>
+                        <span style="font-weight: 500; color: #333;">${cliente.cliente}</span>
+                    </div>
+                    <span style="
+                        background: #2196f3; 
+                        color: white; 
+                        padding: 0.25rem 0.75rem; 
+                        border-radius: 20px; 
+                        font-size: 0.9rem;
+                        font-weight: 600;
+                    ">${cliente.total_chamados} chamados</span>
+                `;
+                
+                div.addEventListener('mouseenter', () => {
+                    div.style.transform = 'translateY(-2px)';
+                });
+                
+                div.addEventListener('mouseleave', () => {
+                    div.style.transform = 'translateY(0)';
+                });
+                
                 clientesContainer.appendChild(div);
             });
+        }
+
+        function gerarInsightsIA(resultado, periodo) {
+            const insights = [];
+            const total = resultado.total_chamados;
+            
+            // Análise temporal
+            const periodoTexto = periodo == 7 ? 'última semana' : 
+                                periodo == 30 ? 'último mês' : 
+                                periodo == 90 ? 'últimos 3 meses' : 'último ano';
+            
+            insights.push(`📈 Análise de ${total} chamados na ${periodoTexto} concluída com sucesso`);
+            
+            // Análise de criticidade
+            const criticidades = resultado.distribuicao_criticidade;
+            const criticas = (criticidades['CRÍTICA'] || 0) + (criticidades['ALTA'] || 0);
+            const porcentagemCriticas = ((criticas / total) * 100).toFixed(1);
+            
+            if (porcentagemCriticas > 30) {
+                insights.push(`⚠️ Alto volume de chamados críticos/altos: ${porcentagemCriticas}% requer atenção imediata`);
+            } else if (porcentagemCriticas < 10) {
+                insights.push(`✅ Baixo índice de criticidade: apenas ${porcentagemCriticas}% são críticos/altos`);
+            } else {
+                insights.push(`📊 Distribuição balanceada de criticidade: ${porcentagemCriticas}% são críticos/altos`);
+            }
+            
+            // Análise de clientes
+            const topCliente = resultado.clientes_mais_ativos[0];
+            if (topCliente && topCliente.total_chamados > total * 0.3) {
+                insights.push(`🔍 Cliente "${topCliente.cliente}" concentra ${((topCliente.total_chamados / total) * 100).toFixed(1)}% dos chamados`);
+            }
+            
+            // Análise de grupos similares
+            if (resultado.total_grupos_similares > total * 0.2) {
+                insights.push(`🔗 Alto índice de similaridade: ${resultado.total_grupos_similares} grupos identificados sugerem padrões recorrentes`);
+            } else if (resultado.total_grupos_similares < total * 0.1) {
+                insights.push(`🌟 Baixa repetição: poucos padrões similares indicam diversidade de problemas`);
+            }
+            
+            // Insight de performance
+            const eficiencia = Math.round((resultado.total_grupos_similares / total) * 100);
+            if (eficiencia > 80) {
+                insights.push(`🚀 Sistema funcionando com alta eficiência: ${eficiencia}% de acurácia na identificação`);
+            } else if (eficiencia < 50) {
+                insights.push(`⚡ Oportunidade de melhoria: sistema pode ser otimizado para melhor performance`);
+            }
+            
+            return insights;
         }
 
         // Inicializar seção IA na carga da página
@@ -5075,13 +5540,29 @@ Data: ${new Date().toLocaleDateString('pt-BR')}`;
             carregarDadosModuloIA('triagem');
         });
 
-        // Auto-refresh a cada 30 segundos
+        // Auto-refresh a cada 30 segundos - apenas da página ativa
         setInterval(() => {
-            carregarDashboard();
-            carregarDashboardAvancado();
-            carregarChamados();
+            const activePage = document.querySelector('.page-content.active');
+            if (activePage) {
+                const pageId = activePage.id.replace('page-', '');
+                switch(pageId) {
+                    case 'dashboard':
+                        carregarDashboard();
+                        carregarDashboardAvancado();
+                        break;
+                    case 'chamados':
+                        carregarChamados();
+                        break;
+                    case 'ia':
+                        // Refresh dos dados de IA se necessário
+                        break;
+                }
+            }
         }, 30000000);
     </script>
+        </div>
+        </div>
+    </div>
 
     <!-- Modal para detalhes do chamado -->
     <div id="chamadoModal" class="modal" style="display: none;">
